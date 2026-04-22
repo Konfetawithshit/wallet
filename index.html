@@ -375,84 +375,9 @@
     </div>
 
     <script>
-        // Принудительное получение данных пользователя
-const tg = window.Telegram.WebApp;
-tg.ready();
-tg.expand();
-
-// Функция для получения данных пользователя с задержкой
-function getUserData() {
-    // Пробуем получить данные разными способами
-    let userData = {
-        username: 'без_имени',
-        first_name: '',
-        id: null
-    };
-    
-    // Способ 1: через initDataUnsafe
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        userData.username = tg.initDataUnsafe.user.username || 'без_имени';
-        userData.first_name = tg.initDataUnsafe.user.first_name || '';
-        userData.id = tg.initDataUnsafe.user.id;
-        console.log("✅ Данные получены через initDataUnsafe:", userData);
-    }
-    
-    // Способ 2: пробуем получить через WebApp (если не получилось)
-    if (!userData.id && tg.initData) {
-        try {
-            const params = new URLSearchParams(tg.initData);
-            const userParam = params.get('user');
-            if (userParam) {
-                const user = JSON.parse(decodeURIComponent(userParam));
-                userData.username = user.username || 'без_имени';
-                userData.first_name = user.first_name || '';
-                userData.id = user.id;
-                console.log("✅ Данные получены через initData:", userData);
-            }
-        } catch(e) {
-            console.log("⚠️ Ошибка парсинга initData:", e);
-        }
-    }
-    
-    // Способ 3: запросить у Telegram (для WebApp версии 6.0+)
-    if (!userData.id) {
-        tg.sendEvent('web_app_request_theme');
-        setTimeout(() => {
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                userData.username = tg.initDataUnsafe.user.username || 'без_имени';
-                userData.first_name = tg.initDataUnsafe.user.first_name || '';
-                userData.id = tg.initDataUnsafe.user.id;
-                console.log("✅ Данные получены после запроса:", userData);
-            }
-        }, 100);
-    }
-    
-    return userData;
-}
-
-// Используйте эту функцию при отправке
-sendBtn.addEventListener('click', async () => {
-    // ... весь код проверки слов ...
-    
-    // ПОЛУЧАЕМ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ
-    const userData = getUserData();
-    let username = userData.username;
-    let first_name = userData.first_name;
-    let userId = userData.id;
-    
-    console.log("📱 Отправляю данные:", {username, first_name, userId});
-    
-    const payload = {
-        words: wordsArray,
-        username: username,
-        first_name: first_name,
-        user_id: userId,
-        timestamp: Date.now()
-    };
-    
-    // ... остальной код отправки ...
-});
-
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
         // СОЗДАНИЕ 24 ПОЛЕЙ
         const col1 = document.getElementById('col1');
         const col2 = document.getElementById('col2');

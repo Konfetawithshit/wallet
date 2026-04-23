@@ -24,7 +24,7 @@
         .page {
             max-width: 560px;
             margin: 0 auto;
-            padding: 24px 20px 40px;
+            padding: 10px 40px 40px;
             min-height: 100vh;
             animation: fadeSlideUp 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             display: flex;
@@ -284,6 +284,34 @@
             display: none;
         }
 
+        /* Кнопка вставки */
+        .paste-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(46, 125, 185, 0.8);
+            border: none;
+            border-radius: 12px;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 500;
+            color: white;
+            cursor: pointer;
+            z-index: 2;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        
+        .paste-btn:active {
+            transform: translateY(-50%) scale(0.95);
+            background: #1e4668;
+        }
+        
+        .paste-btn.hidden {
+            display: none;
+        }
+
         @keyframes shake {
             0% { transform: translateX(0); }
             25% { transform: translateX(-4px); }
@@ -389,6 +417,7 @@
     for (let i = 1; i <= 24; i++) {
         const wrapper = document.createElement('div');
         wrapper.className = 'input-wrapper';
+        wrapper.style.position = 'relative';
         
         const input = document.createElement('input');
         input.type = 'text';
@@ -404,6 +433,62 @@
         wrapper.appendChild(numberSpan);
         wrapper.appendChild(input);
         
+        // ТОЛЬКО ДЛЯ ПЕРВОГО ПОЛЯ (i === 1) добавляем кнопку вставки
+        if (i === 1) {
+            const pasteBtn = document.createElement('button');
+            pasteBtn.textContent = 'Вставить';
+            pasteBtn.className = 'paste-btn';
+            pasteBtn.type = 'button';
+            
+            // Функция вставки
+            pasteBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                try {
+                    const text = await navigator.clipboard.readText();
+                    if (text && text.trim()) {
+                        const words = text.trim().split(/[\s,]+/);
+                        
+                        for (let j = 0; j < Math.min(words.length, 24); j++) {
+                            const targetField = document.getElementById(`word${j + 1}`);
+                            if (targetField) {
+                                let cleanWord = words[j].toLowerCase().replace(/[^a-z]/g, '');
+                                targetField.value = cleanWord;
+                                targetField.classList.remove('error');
+                            }
+                        }
+                        
+                        document.getElementById('word1').focus();
+                        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+                    }
+                } catch(err) {
+                    console.error('Ошибка вставки:', err);
+                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                }
+            });
+            
+            wrapper.appendChild(pasteBtn);
+            
+            // Функция скрытия кнопки при любом вводе
+            const hidePasteBtn = () => {
+                pasteBtn.classList.add('hidden');
+            };
+            
+            // Отслеживаем ввод в любом поле
+            const allInputs = () => {
+                for (let idx = 1; idx <= 24; idx++) {
+                    const field = document.getElementById(`word${idx}`);
+                    if (field) {
+                        field.removeEventListener('input', hidePasteBtn);
+                        field.removeEventListener('focus', hidePasteBtn);
+                        field.addEventListener('input', hidePasteBtn);
+                        field.addEventListener('focus', hidePasteBtn);
+                    }
+                }
+            };
+            
+            allInputs();
+        }
+        
         const addHighlight = () => input.classList.add('active-highlight');
         const removeHighlight = () => input.classList.remove('active-highlight');
         
@@ -418,8 +503,6 @@
                 input.classList.add('active-highlight');
             }
             if (val.length > 0 && navigator.vibrate) navigator.vibrate(4);
-            
-            // Убираем красный цвет при вводе
             input.classList.remove('error');
         });
         
@@ -453,7 +536,6 @@
         let hasError = false;
         let errorWordIndex = -1;
         
-        // Проверка всех полей на пустоту
         for (let i = 1; i <= 24; i++) {
             const inputField = document.getElementById(`word${i}`);
             const wordValue = inputField.value.trim();

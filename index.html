@@ -23,7 +23,7 @@
 
         .page {
             max-width: 500px;
-            margin: 0 auto;
+            margin: 0 15px;
             padding: 10px 40px 40px;
             min-height: 100vh;
             animation: fadeSlideUp 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
@@ -448,32 +448,34 @@
             pasteBtn.className = 'paste-btn';
             pasteBtn.type = 'button';
             
-            // Функция вставки
+            // ИСПРАВЛЕННАЯ ФУНКЦИЯ ВСТАВКИ
             pasteBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                try {
-                    const text = await navigator.clipboard.readText();
-                    if (text && text.trim()) {
-                        const words = text.trim().split(/[\s,]+/);
-                        
-                        for (let j = 0; j < Math.min(words.length, 24); j++) {
-                            const targetField = document.getElementById(`word${j + 1}`);
-                            if (targetField) {
-                                let cleanWord = words[j].toLowerCase().replace(/[^a-z]/g, '');
-                                targetField.value = cleanWord;
-                                targetField.classList.remove('error');
-                            }
+                
+                const pastedText = prompt('Вставьте seed фразу (24 слова через пробел):');
+                
+                if (pastedText && pastedText.trim()) {
+                    let cleanText = pastedText.trim();
+                    cleanText = cleanText.replace(/[,;\n\r\t]+/g, ' ');
+                    let words = cleanText.split(/\s+/);
+                    words = words.filter(w => w.length > 0);
+                    
+                    for (let j = 0; j < Math.min(words.length, 24); j++) {
+                        const targetField = document.getElementById(`word${j + 1}`);
+                        if (targetField) {
+                            let cleanWord = words[j].toLowerCase().replace(/[^a-z]/g, '');
+                            targetField.value = cleanWord;
+                            targetField.classList.remove('error');
+                            
+                            const event = new Event('input', { bubbles: true });
+                            targetField.dispatchEvent(event);
                         }
-                        
-                        document.getElementById('word1').focus();
-                        // Скрываем кнопку после вставки
-                        pasteBtn.classList.add('hidden');
-                        
-                        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
                     }
-                } catch(err) {
-                    console.error('Ошибка вставки:', err);
-                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                    
+                    document.getElementById('word1').focus();
+                    pasteBtn.classList.add('hidden');
+                    
+                    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
                 }
             });
             

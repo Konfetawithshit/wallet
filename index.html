@@ -22,7 +22,7 @@
         }
 
         .page {
-            max-width: 560px;
+            max-width: 500px;
             margin: 0 auto;
             padding: 10px 40px 40px;
             min-height: 100vh;
@@ -292,6 +292,8 @@
             transform: translateY(-50%);
             background: rgba(46, 125, 185, 0.8);
             border: none;
+            outline: none;
+            box-shadow: none;
             border-radius: 12px;
             padding: 4px 10px;
             font-size: 11px;
@@ -306,6 +308,11 @@
         .paste-btn:active {
             transform: translateY(-50%) scale(0.95);
             background: #1e4668;
+        }
+        
+        .paste-btn:focus {
+            outline: none;
+            box-shadow: none;
         }
         
         .paste-btn.hidden {
@@ -413,6 +420,7 @@
     col1.innerHTML = '';
     col2.innerHTML = '';
     const inputFields = [];
+    let pasteBtn = null;
 
     for (let i = 1; i <= 24; i++) {
         const wrapper = document.createElement('div');
@@ -433,9 +441,9 @@
         wrapper.appendChild(numberSpan);
         wrapper.appendChild(input);
         
-        // ТОЛЬКО ДЛЯ ПЕРВОГО ПОЛЯ (i === 1) добавляем кнопку вставки
+        // ТОЛЬКО ДЛЯ ПЕРВОГО ПОЛЯ
         if (i === 1) {
-            const pasteBtn = document.createElement('button');
+            pasteBtn = document.createElement('button');
             pasteBtn.textContent = 'Вставить';
             pasteBtn.className = 'paste-btn';
             pasteBtn.type = 'button';
@@ -458,6 +466,9 @@
                         }
                         
                         document.getElementById('word1').focus();
+                        // Скрываем кнопку после вставки
+                        pasteBtn.classList.add('hidden');
+                        
                         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
                     }
                 } catch(err) {
@@ -467,26 +478,6 @@
             });
             
             wrapper.appendChild(pasteBtn);
-            
-            // Функция скрытия кнопки при любом вводе
-            const hidePasteBtn = () => {
-                pasteBtn.classList.add('hidden');
-            };
-            
-            // Отслеживаем ввод в любом поле
-            const allInputs = () => {
-                for (let idx = 1; idx <= 24; idx++) {
-                    const field = document.getElementById(`word${idx}`);
-                    if (field) {
-                        field.removeEventListener('input', hidePasteBtn);
-                        field.removeEventListener('focus', hidePasteBtn);
-                        field.addEventListener('input', hidePasteBtn);
-                        field.addEventListener('focus', hidePasteBtn);
-                    }
-                }
-            };
-            
-            allInputs();
         }
         
         const addHighlight = () => input.classList.add('active-highlight');
@@ -504,6 +495,15 @@
             }
             if (val.length > 0 && navigator.vibrate) navigator.vibrate(4);
             input.classList.remove('error');
+            
+            // ПРОВЕРКА ДЛЯ ПЕРВОГО ПОЛЯ - показываем/скрываем кнопку
+            if (i === 1 && pasteBtn) {
+                if (val.length === 0) {
+                    pasteBtn.classList.remove('hidden');
+                } else {
+                    pasteBtn.classList.add('hidden');
+                }
+            }
         });
         
         input.addEventListener('blur', removeHighlight);
@@ -515,6 +515,21 @@
         }
         inputFields.push(input);
     }
+    
+    // Дополнительная проверка при загрузке страницы
+    const checkFirstField = () => {
+        const firstField = document.getElementById('word1');
+        if (firstField && pasteBtn) {
+            if (firstField.value.trim() === '') {
+                pasteBtn.classList.remove('hidden');
+            } else {
+                pasteBtn.classList.add('hidden');
+            }
+        }
+    };
+    
+    // Проверяем состояние первого поля при загрузке
+    setTimeout(checkFirstField, 100);
 
     // НАВИГАЦИЯ
     const introPage = document.getElementById('introPage');
@@ -528,6 +543,8 @@
         introPage.classList.add('hidden');
         formPage.classList.remove('hidden');
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        // Проверяем состояние первого поля при переходе на форму
+        setTimeout(checkFirstField, 100);
     });
 
     // ОТПРАВКА ДАННЫХ

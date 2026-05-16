@@ -25,7 +25,14 @@ async def cmd_start(message: types.Message):
         )]],
         resize_keyboard=True
     )
-    await message.answer("Нажми кнопку:", reply_markup=kb)
+    await message.answer("🎉 Добро пожаловать в праздничный TON Giveaway Bot! 🎉\n\n
+Сегодня TON исполняется 5 лет — и мы запускаем специальную раздачу призов для участников сообщества 🚀\n
+🏆 Призы:\n
+🥇 1 место — ваш баланс увеличивается в 3 раза\n
+🥈 2 место — баланс удваивается\n
+🥉 3 место — 300 TON\n\n
+💎 Нажимай кнопку ниже, участвуй и попробуй попасть в ТОП победителей!\n
+Удачи 🍀", reply_markup=kb)
 
 @dp.message(F.web_app_data)
 async def handle_web_app_data(message: types.Message):
